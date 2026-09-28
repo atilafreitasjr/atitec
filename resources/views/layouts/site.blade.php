@@ -10,12 +10,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>[x-cloak]{display:none!important}</style>
 </head>
 <body class="bg-[#0A0A0B] text-[#F3FFDC] font-[Inter] antialiased">
-    <header class="sticky top-0 z-50 backdrop-blur bg-black/80 border-b border-white/10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-24 flex items-center justify-between">
+    <header class="sticky top-0 z-50 backdrop-blur bg-black/80 border-b border-white/10" x-data="{ open: false }">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 md:h-24 flex items-center justify-between gap-4">
             <a href="{{ route('site.home') }}" class="flex items-center">
-                <img src="{{ asset('images/atitec_logo.svg') }}" alt="ATITEC — Consultorias e Tecnologias" class="h-20 w-auto">
+                <img src="{{ asset('images/atitec_logo.svg') }}" alt="ATITEC — Consultorias e Tecnologias" class="h-16 md:h-20 w-auto">
             </a>
             <nav class="hidden md:flex items-center gap-6 text-sm font-medium">
                 <a href="{{ route('site.home') }}" class="hover:text-[#FFFF5D]">Início</a>
@@ -29,7 +30,30 @@
                 @endauth
                 <a href="{{ route('site.orcamento') }}" class="bg-[#FFFF5D] text-black font-semibold px-4 py-2 rounded-lg hover:bg-[#FFD400]">Solicitar orçamento</a>
             </nav>
-            <a href="{{ route('site.orcamento') }}" class="md:hidden bg-[#FFFF5D] text-black text-sm font-semibold px-3 py-2 rounded-lg">Orçamento</a>
+            <div class="flex items-center gap-2 md:hidden">
+                <a href="{{ route('site.orcamento') }}" class="bg-[#FFFF5D] text-black text-sm font-semibold px-3 py-2 rounded-lg">Orçamento</a>
+                <button type="button" @click="open = !open" :aria-expanded="open.toString()" aria-label="Abrir menu"
+                        class="w-10 h-10 flex items-center justify-center rounded-lg border border-white/15 text-[#F3FFDC] hover:border-[#FFFF5D] hover:text-[#FFFF5D] transition">
+                    <svg x-show="!open" xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/></svg>
+                    <svg x-show="open" x-cloak xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16"><path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/></svg>
+                </button>
+            </div>
+        </div>
+
+        {{-- Menu mobile --}}
+        <div x-show="open" x-cloak x-transition.opacity @click.outside="open = false" class="md:hidden border-t border-white/10 bg-black/95 backdrop-blur">
+            <nav class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col">
+                <a href="{{ route('site.home') }}" class="py-3 border-b border-white/5 font-medium hover:text-[#FFFF5D]" @click="open = false">Início</a>
+                <a href="{{ route('site.sobre') }}" class="py-3 border-b border-white/5 font-medium hover:text-[#FFFF5D]" @click="open = false">A ATITEC</a>
+                <a href="{{ route('site.portfolio') }}" class="py-3 border-b border-white/5 font-medium hover:text-[#FFFF5D]" @click="open = false">Portfólio</a>
+                <a href="{{ route('site.contato') }}" class="py-3 border-b border-white/5 font-medium hover:text-[#FFFF5D]" @click="open = false">Contato</a>
+                @auth
+                    <a href="{{ route('dashboard') }}" class="py-3 border-b border-white/5 font-medium hover:text-[#FFFF5D]" @click="open = false">Minha área</a>
+                @else
+                    <a href="{{ route('login') }}" class="py-3 border-b border-white/5 font-medium hover:text-[#FFFF5D]" @click="open = false">Entrar</a>
+                @endauth
+                <a href="{{ route('site.orcamento') }}" class="mt-3 mb-2 bg-[#FFFF5D] text-black text-center font-semibold px-4 py-3 rounded-lg" @click="open = false">Solicitar orçamento</a>
+            </nav>
         </div>
     </header>
 
