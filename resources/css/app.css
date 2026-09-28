@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+@theme {
+    --color-atitec-black: #000000;
+    --color-atitec-coal: #0a0a0b;
+    --color-atitec-graphite: #1a1d21;
+    --color-atitec-yellow: #ffff5d;
+    --color-atitec-gold: #ffd400;
+    --color-atitec-ice: #f3ffdc;
+    --font-display: "Montserrat", "Inter", sans-serif;
+}
