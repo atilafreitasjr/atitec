@@ -1,6 +1,13 @@
 # ATITEC — Site institucional + Portal do Cliente — AGENTS.md
 
-## Setup
+## Deploy (produção Hostinger, SSH `ssh -p 65002 u852815632@141.136.43.35`)
+- Repo: `git@github.com:atilafreitasjr/atitec.git` (branch `main`). Chave de deploy: `~/.ssh/atitec_github.pub` (cadastrada no GitHub).
+- Layout no servidor: app em `~/domains/atitec.com.br/atitec` (clone https), `public_html` = symlink → `atitec/public`. Legado preservado em `~/domains/atitec.com.br/backups/legacy_*`.
+- `.env` produção (NUNCA commitar): `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://atitec.com.br`, `DB_CONNECTION=mysql`, `DB_HOST=localhost`, `DB_DATABASE=u852815632_atitec`, `DB_USERNAME=u852815632_atitec` (senha no cofre do dono). Sem Redis no compartilhado: `CACHE_STORE=database`, `SESSION_DRIVER=database`, `QUEUE_CONNECTION=database`.
+- Checklist de deploy (nesta ordem): `git pull` → `composer install --no-dev --optimize-autoloader` → backup do banco → `php artisan migrate --force` → `php artisan optimize:clear` → `php artisan config:cache` (SEM `route:cache` — há rota closure em `/dashboard`).
+- Frontend: build do Vite QUEBRA no servidor (panic do rolldown) — sempre `npm run build` LOCAL + `rsync public/build/` para `atitec/public/build/`.
+- Subdomínio `cartao.atitec.com.br`: criar no hPanel e apontar/symlink para o mesmo `public` (a rota `/` do subdomínio abre o cartão via `Route::domain`).
+- PHP web >= 8.3 no hPanel (Laravel 13). Forçar HTTPS no hPanel.
 - Laravel 13 + Laravel Sail (Docker). PHP 8.3+, MariaDB 11, Redis, phpMyAdmin.
 - Subir: `docker compose up -d` (na raiz do projeto).
 - Comandos Artisan **dentro do container como usuário `sail`** (evita arquivos owned by root):
