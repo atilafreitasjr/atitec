@@ -7,6 +7,9 @@
     $telValue = $channels['phone']->value ?? '(42) 99999-9999';
     $telDigits = preg_replace('/\D/', '', $telUrl);
     $waText = urlencode('Olá '.$card['name'].'! Vi seu cartão digital e quero conversar.');
+    // URLs absolutas do site principal: o cartão também é servido no subdomínio
+    // cartao.atitec.com.br, onde route() geraria links quebrados no próprio subdomínio.
+    $siteUrl = rtrim(config('app.url'), '/');
 @endphp
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -60,16 +63,21 @@
             </div>
 
             <div class="grid grid-cols-2 gap-3 mt-3">
-                <a href="{{ route('site.cartao.vcard') }}" class="text-center text-sm font-semibold border border-white/20 rounded-2xl py-3 hover:border-[#FFFF5D] hover:text-[#FFFF5D] transition">＋ Salvar contato</a>
+                <a href="{{ $siteUrl }}/cartao/vcard" class="text-center text-sm font-semibold border border-white/20 rounded-2xl py-3 hover:border-[#FFFF5D] hover:text-[#FFFF5D] transition">＋ Salvar contato</a>
                 <button onclick="if(navigator.share){navigator.share({title:document.title,url:location.href})}else{navigator.clipboard.writeText(location.href);this.textContent='Link copiado ✓';}" class="text-sm font-semibold border border-white/20 rounded-2xl py-3 hover:border-[#FFFF5D] hover:text-[#FFFF5D] transition">⤴ Compartilhar</button>
             </div>
+
+            <a href="{{ $siteUrl }}" class="flex items-center justify-center gap-2 mt-3 bg-white/10 border border-[#FFFF5D]/40 text-[#FFFF5D] font-bold rounded-2xl py-3.5 hover:bg-[#FFFF5D] hover:text-black active:scale-[0.99] transition">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m7.5-6.923c-.67.204-1.335.82-1.887 1.855A8 8 0 0 0 5.145 4H7.5zM4.09 4a9.3 9.3 0 0 1 .64-1.539 7 7 0 0 1 .597-.933A7.03 7.03 0 0 0 2.255 4zm-.582 3.5c.03-.877.138-1.718.312-2.5H1.674a7 7 0 0 0-.656 2.5zM4.847 5a12.5 12.5 0 0 0-.338 2.5H7.5V5zM8.5 5v2.5h2.99a12.5 12.5 0 0 0-.337-2.5zM4.51 8.5a12.5 12.5 0 0 0 .337 2.5H7.5V8.5zm3.99 0V11h2.653c.187-.765.306-1.608.338-2.5zM5.145 12q.208.58.468 1.068c.552 1.035 1.218 1.65 1.887 1.855V12zm.182 2.472a7 7 0 0 1-.597-.933A9.3 9.3 0 0 1 4.09 12H2.255a7 7 0 0 0 3.072 2.472M3.82 11a13.7 13.7 0 0 1-.312-2.5h-2.49c.062.89.291 1.733.656 2.5zm6.853 3.472A7 7 0 0 0 13.745 12H11.91a9.3 9.3 0 0 1-.64 1.539 7 7 0 0 1-.597.933M8.5 12v2.923c.67-.204 1.335-.82 1.887-1.855q.26-.487.468-1.068zm3.68-1h2.146c.365-.767.594-1.61.656-2.5h-2.49a13.7 13.7 0 0 1-.312 2.5m2.802-3.5a7 7 0 0 0-.656-2.5H12.18c.174.782.282 1.623.312 2.5zM11.27 2.461c.247.464.462.98.64 1.539h1.835a7 7 0 0 0-3.072-2.472c.218.284.418.598.597.933M10.855 4a7.8 7.8 0 0 0-.468-1.068C9.835 1.897 9.17 1.282 8.5 1.077V4z"/></svg>
+                Conheça o site da ATITEC
+            </a>
 
             {{-- Portfólio --}}
             <h2 class="font-[Montserrat] font-bold text-lg mt-10 mb-1">Portfólio de projetos</h2>
             <p class="text-xs text-gray-500 mb-4">Sistemas em produção pela ATITEC — toque para ver o case.</p>
             <div class="space-y-2.5">
                 @foreach($projects as $p)
-                <a href="{{ route('site.case', $p->slug) }}" class="flex items-center justify-between gap-3 bg-white/5 border border-white/10 rounded-2xl px-4 py-3.5 hover:border-[#FFFF5D]/60 active:scale-[0.99] transition">
+                <a href="{{ $siteUrl }}/portfolio/{{ $p->slug }}" class="flex items-center justify-between gap-3 bg-white/5 border border-white/10 rounded-2xl px-4 py-3.5 hover:border-[#FFFF5D]/60 active:scale-[0.99] transition">
                     <span>
                         <span class="block font-semibold text-sm">{{ $p->title }}</span>
                         <span class="block text-[11px] text-gray-500 uppercase tracking-wider mt-0.5">{{ $p->segment }}</span>
@@ -82,7 +90,7 @@
             {{-- Deixe seu contato --}}
             <h2 class="font-[Montserrat] font-bold text-lg mt-10 mb-1">Deixe seu contato</h2>
             <p class="text-xs text-gray-500 mb-4">Preencha e eu retorno em breve.</p>
-            <form method="POST" action="{{ route('site.cartao.contato') }}" class="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3.5">
+            <form method="POST" action="{{ $siteUrl }}/cartao/contato" class="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3.5">
                 @csrf
                 @if($errors->any())<div class="bg-red-900/50 border border-red-500/40 text-sm rounded-lg p-3">{{ $errors->first() }}</div>@endif
                 <div><label class="text-sm font-medium">Nome*</label><input name="name" required value="{{ old('name') }}" placeholder="Seu nome" class="mt-1 w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-3 text-sm"></div>
@@ -93,7 +101,7 @@
             </form>
 
             <div class="text-center mt-8">
-                <a href="{{ route('site.home') }}" class="text-xs text-gray-500 hover:text-[#FFFF5D]">atitec.com.br — site institucional</a>
+                <a href="{{ $siteUrl }}" class="text-xs text-gray-500 hover:text-[#FFFF5D]">atitec.com.br — site institucional</a>
             </div>
         </main>
     </div>
