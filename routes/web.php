@@ -33,6 +33,11 @@ Route::get('/cartao', [SiteController::class, 'cartao'])->name('site.cartao');
 Route::post('/cartao/contato', [SiteController::class, 'cartaoContatoStore'])->name('site.cartao.contato');
 Route::get('/cartao/vcard', [SiteController::class, 'cartaoVcard'])->name('site.cartao.vcard');
 
+// Subdomínio dedicado abre direto o cartão (mesmo docroot do site principal).
+Route::domain('cartao.atitec.com.br')->group(function () {
+    Route::get('/', [SiteController::class, 'cartao']);
+});
+
 // ---- Pós-login: redireciona por perfil ----
 Route::get('/dashboard', function () {
     $role = auth()->user()->role;
