@@ -13,9 +13,9 @@
 </head>
 <body class="bg-[#0A0A0B] text-[#F3FFDC] font-[Inter] antialiased">
     <header class="sticky top-0 z-50 backdrop-blur bg-black/80 border-b border-white/10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-24 flex items-center justify-between">
             <a href="{{ route('site.home') }}" class="flex items-center">
-                <img src="{{ asset('images/atitec_logo.svg') }}" alt="ATITEC — Consultorias e Tecnologias" class="h-12 w-auto">
+                <img src="{{ asset('images/atitec_logo.svg') }}" alt="ATITEC — Consultorias e Tecnologias" class="h-20 w-auto">
             </a>
             <nav class="hidden md:flex items-center gap-6 text-sm font-medium">
                 <a href="{{ route('site.home') }}" class="hover:text-[#FFFF5D]">Início</a>
