@@ -7,6 +7,7 @@
 - Checklist de deploy (nesta ordem): `git pull` → `composer install --no-dev --optimize-autoloader` → backup do banco → `php artisan migrate --force` → `php artisan optimize:clear` → `php artisan config:cache` (SEM `route:cache` — há rota closure em `/dashboard`).
 - Frontend: build do Vite QUEBRA no servidor (panic do rolldown) — sempre `npm run build` LOCAL + `rsync public/build/` para `atitec/public/build/`.
 - Subdomínio `cartao.atitec.com.br`: criar no hPanel e apontar/symlink para o mesmo `public` (a rota `/` do subdomínio abre o cartão via `Route::domain`).
+- **Subdomínio `adocao.atitec.com.br` (app Laravel separado, NÃO mexer)**: núcleo em `~/domains/atitec.com.br/adocao_sis` (fora do docroot; banco `u852815632_adocao`); entrada web em `public_html/adocao_sis/` (= `atitec/public/adocao_sis/`) com `index.php` que dá boot no app externo via `usePublicPath(__DIR__)` + `.htaccess` padrão + symlinks `build/` e `storage/`. NUNCA apagar `public/adocao_sis/` nem rodar `git clean` no deploy do site (a pasta é untracked e vital para o subdomínio).
 - PHP web >= 8.3 no hPanel (Laravel 13). Forçar HTTPS no hPanel.
 - Laravel 13 + Laravel Sail (Docker). PHP 8.3+, MariaDB 11, Redis, phpMyAdmin.
 - Subir: `docker compose up -d` (na raiz do projeto).
