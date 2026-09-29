@@ -31,16 +31,21 @@ class ConversationController extends Controller
     {
         $data = $request->validate([
             'subject' => ['required', 'string', 'max:160'],
-            'client_id' => ['nullable', 'exists:clients,id'],
-            'is_broadcast' => ['sometimes', 'boolean'],
+            'destino' => ['required', 'in:cliente,geral'],
+            'client_id' => ['required_if:destino,cliente', 'nullable', 'exists:clients,id'],
             'body' => ['required', 'string', 'max:5000'],
+        ], [
+            'client_id.required_if' => 'Selecione o cliente da conversa.',
         ]);
+
+        $isBroadcast = $data['destino'] === 'geral';
 
         $conversation = Conversation::create([
             'subject' => $data['subject'],
-            'client_id' => $data['client_id'] ?? null,
+            // Comunicado geral não fica vinculado a um cliente específico.
+            'client_id' => $isBroadcast ? null : $data['client_id'],
             'created_by' => auth()->id(),
-            'is_broadcast' => $data['is_broadcast'] ?? false,
+            'is_broadcast' => $isBroadcast,
         ]);
 
         ClientMessage::create([
@@ -54,6 +59,12 @@ class ConversationController extends Controller
 
     public function show(Conversation $conversation): View
     {
+        // Abrir a conversa marca como lidas as mensagens enviadas pelo cliente.
+        $conversation->messages()
+            ->where('user_id', '!=', auth()->id())
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+
         return view('admin.conversations.show', [
             'conversation' => $conversation->load(['client', 'messages.user']),
         ]);
@@ -61,6 +72,12 @@ class ConversationController extends Controller
 
     public function update(Request $request, Conversation $conversation): RedirectResponse
     {
+        // Reabre a conversa ao responder, caso estivesse encerrada.
+        if ($conversation->closed_at) {
+            return redirect()->route('admin.conversations.show', $conversation)
+                ->withErrors(['body' => 'Esta conversa está encerrada. Reabra antes de responder.']);
+        }
+
         $data = $request->validate(['body' => ['required', 'string', 'max:5000']]);
 
         ClientMessage::create([
@@ -70,6 +87,13 @@ class ConversationController extends Controller
         ]);
 
         return redirect()->route('admin.conversations.show', $conversation)->with('success', 'Resposta enviada.');
+    }
+
+    public function reopen(Conversation $conversation): RedirectResponse
+    {
+        $conversation->update(['closed_at' => null]);
+
+        return redirect()->route('admin.conversations.show', $conversation)->with('success', 'Conversa reaberta.');
     }
 
     public function destroy(Conversation $conversation): RedirectResponse

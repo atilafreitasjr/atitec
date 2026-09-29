@@ -79,9 +79,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:ad
     $resource('projects', ProjectController::class, 'project');
     $resource('clients', ClientController::class, 'client');
     $resource('invoices', InvoiceController::class, 'invoice');
-    $resource('conversations', ConversationController::class, 'conversation', ['index', 'show', 'store', 'update', 'destroy']);
-    Route::get('conversations/create', [ConversationController::class, 'create'])
-        ->name('conversations.create')->middleware('permission:conversation.create');
+    $resource('conversations', ConversationController::class, 'conversation', ['index', 'create', 'store', 'show', 'update', 'destroy']);
+    Route::post('conversations/{conversation}/reopen', [ConversationController::class, 'reopen'])
+        ->name('conversations.reopen')->middleware('permission:conversation.edit');
     $resource('leads', LeadController::class, 'lead', ['index', 'show', 'update', 'destroy']);
     $resource('channels', ChannelController::class, 'channel', ['index', 'store', 'update', 'destroy']);
 

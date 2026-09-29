@@ -57,15 +57,31 @@ class PortalController extends Controller
         ]);
     }
 
-    public function mensagens(): View
+    public function mensagens(Request $request): View
     {
         $client = auth()->user()->client;
         $conversations = $client?->conversations()->with('messages.user')->latest()->get() ?? collect();
         $broadcasts = Conversation::where('is_broadcast', true)->with('messages.user')->latest()->get();
 
+        $selected = null;
+        if ($conversations->isNotEmpty()) {
+            $id = $request->integer('conversation');
+            $selected = $id ? $conversations->firstWhere('id', $id) : $conversations->first();
+
+            // Abrir a conversa marca como lidas as mensagens enviadas pela ATITEC.
+            if ($selected) {
+                $selected->messages()
+                    ->where('user_id', '!=', auth()->id())
+                    ->whereNull('read_at')
+                    ->update(['read_at' => now()]);
+                $selected->load('messages.user');
+            }
+        }
+
         return view('cliente.mensagens', [
             'conversations' => $conversations,
             'broadcasts' => $broadcasts,
+            'selected' => $selected,
         ]);
     }
 

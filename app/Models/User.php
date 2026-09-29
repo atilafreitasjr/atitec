@@ -47,6 +47,12 @@ class User extends Authenticatable
         return $this->belongsTo(Client::class);
     }
 
+    /** Avatar exibido no topo do AdminLTE (evita as fotos de demonstração do pacote). */
+    public function getProfilePhotoUrlAttribute(): string
+    {
+        return asset('images/atitec_logo.png');
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
