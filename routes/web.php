@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\ProjectKanbanController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Cliente\PortalController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SiteController;
@@ -57,13 +59,38 @@ Route::middleware('auth')->group(function () {
 // ---- Área administrativa (AdminLTE) ----
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:admin,gerente,financeiro'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-    Route::resource('projects', ProjectController::class);
-    Route::resource('clients', ClientController::class);
-    Route::resource('invoices', InvoiceController::class);
-    Route::resource('conversations', ConversationController::class)->except(['create', 'edit']);
-    Route::get('conversations/create', [ConversationController::class, 'create'])->name('conversations.create');
-    Route::resource('leads', LeadController::class)->only(['index', 'show', 'update', 'destroy']);
-    Route::resource('channels', ChannelController::class)->only(['index', 'store', 'update', 'destroy']);
+
+    // Cada ação do CRUD é protegida pela permissão Spatie correspondente.
+    $resource = function (string $uri, string $controller, string $module, array $only = ['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']) {
+        $map = [
+            'index' => 'view',
+            'create' => 'create', 'store' => 'create',
+            'show' => 'view',
+            'edit' => 'edit', 'update' => 'edit',
+            'destroy' => 'delete',
+        ];
+        foreach (array_intersect(array_keys($map), $only) as $action) {
+            Route::resource($uri, $controller)
+                ->only($action)
+                ->middleware("permission:{$module}.{$map[$action]}");
+        }
+    };
+
+    $resource('projects', ProjectController::class, 'project');
+    $resource('clients', ClientController::class, 'client');
+    $resource('invoices', InvoiceController::class, 'invoice');
+    $resource('conversations', ConversationController::class, 'conversation', ['index', 'show', 'store', 'update', 'destroy']);
+    Route::get('conversations/create', [ConversationController::class, 'create'])
+        ->name('conversations.create')->middleware('permission:conversation.create');
+    $resource('leads', LeadController::class, 'lead', ['index', 'show', 'update', 'destroy']);
+    $resource('channels', ChannelController::class, 'channel', ['index', 'store', 'update', 'destroy']);
+
+    // ---- Usuários e permissões (Spatie) ----
+    $resource('users', UserController::class, 'user', ['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::get('roles', [RoleController::class, 'index'])->name('roles.index')->middleware('permission:role.view');
+    Route::post('roles', [RoleController::class, 'store'])->name('roles.store')->middleware('permission:role.create');
+    Route::put('roles', [RoleController::class, 'bulkUpdate'])->name('roles.bulk')->middleware('permission:role.edit');
+    Route::delete('roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy')->middleware('permission:role.delete');
 
     // ---- Gestão por projeto: Kanban de entregas/tarefas (isolado por project_id) ----
     Route::prefix('projects/{project}')->name('projects.')->scopeBindings()->group(function () {

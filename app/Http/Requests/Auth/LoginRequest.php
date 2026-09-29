@@ -50,6 +50,16 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        // Usuário desativado no painel não pode entrar.
+        if (! Auth::user()->active) {
+            Auth::guard('web')->logout();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => 'Esta conta está desativada. Procure o administrador.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

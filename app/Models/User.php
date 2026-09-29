@@ -13,14 +13,15 @@ use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password', 'role', 'client_id'])]
+#[Fillable(['name', 'email', 'password', 'role', 'client_id', 'active'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable;
 
-    public const ROLES = ['admin', 'gerente', 'cliente', 'financeiro'];
+    /** Papéis que não podem ser renomeados/removidos (usados no middleware role:). */
+    public const CORE_ROLES = ['admin', 'gerente', 'cliente', 'financeiro'];
 
     protected static function booted(): void
     {
@@ -37,6 +38,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'active' => 'boolean',
         ];
     }
 
@@ -47,6 +49,11 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return in_array($this->role, ['admin', 'gerente'], true);
+        return $this->role === 'admin';
+    }
+
+    public function isCoreRole(): bool
+    {
+        return in_array($this->role, self::CORE_ROLES, true);
     }
 }

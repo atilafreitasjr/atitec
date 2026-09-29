@@ -12,7 +12,7 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             ChannelSeeder::class,
             ProjectSeeder::class,
-            KanbanRolePermissionSeeder::class,
+            RolePermissionSeeder::class,
             // KanbanImportSeeder é one-shot (requer staging import_* do agricultura_familiar).
         ]);
     }

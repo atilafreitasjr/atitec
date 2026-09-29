@@ -8,7 +8,7 @@ use App\Models\Deliverable;
 use App\Models\DeliverableTask;
 use App\Models\Project;
 use App\Models\User;
-use Database\Seeders\KanbanRolePermissionSeeder;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -20,7 +20,7 @@ class KanbanProjectIsolationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(KanbanRolePermissionSeeder::class);
+        $this->seed(RolePermissionSeeder::class);
     }
 
     private function makeProject(string $title, ?Client $client = null): Project

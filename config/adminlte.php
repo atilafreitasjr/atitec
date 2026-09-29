@@ -248,6 +248,10 @@ return [
         ['header' => 'COMUNICAÇÃO'],
         ['text' => 'Mensagens', 'route' => 'admin.conversations.index', 'icon' => 'bi bi-chat-dots'],
         ['text' => 'Canais de contato', 'route' => 'admin.channels.index', 'icon' => 'bi bi-megaphone'],
+
+        ['header' => 'ACESSO'],
+        ['text' => 'Usuários', 'route' => 'admin.users.index', 'icon' => 'bi bi-person-badge', 'can' => 'user.view'],
+        ['text' => 'Papéis e permissões', 'route' => 'admin.roles.index', 'icon' => 'bi bi-shield-lock', 'can' => 'role.view'],
     ],
 
     /*
