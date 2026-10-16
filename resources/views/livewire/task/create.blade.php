@@ -1,6 +1,14 @@
 <div>
     <div class="card">
         <form wire:submit="save" class="card-body">
+            @if($deliverables->isEmpty())
+                <div class="alert alert-warning d-flex justify-content-between align-items-center gap-2">
+                    <span>Este projeto ainda não tem entregas. Crie uma entrega antes de cadastrar tarefas.</span>
+                    @can('deliverable.create')
+                        <a href="{{ route('admin.projects.deliverables.create', $projectId) }}" class="btn btn-sm btn-primary text-nowrap" wire:navigate>Criar entrega</a>
+                    @endcan
+                </div>
+            @endif
             <div class="mb-3">
                 <label class="form-label">Título</label>
                 <input type="text" wire:model="title" class="form-control">
@@ -29,13 +37,12 @@
             </div>
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">Fase</label>
+                    <label class="form-label">Fase do projeto</label>
                     <select wire:model="phase" class="form-select">
                         <option value="">Selecione</option>
-                        <option value="1">Fase 1 — Planejamento e Diagnóstico</option>
-                        <option value="2">Fase 2 — Capacitação e Materiais</option>
-                        <option value="3">Fase 3 — Acompanhamento e Articulação</option>
-                        <option value="4">Fase 4 — Sistematização e Encerramento</option>
+                        @foreach(\App\Models\DeliverableTask::PHASES as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div class="col-md-6 mb-3">
@@ -92,7 +99,7 @@
             </div>
             <div class="d-flex justify-content-end gap-2">
                 <a href="{{ route('admin.projects.tasks.index', $projectId) }}" class="btn btn-secondary" wire:navigate>Cancelar</a>
-                <button type="submit" class="btn btn-primary">Salvar</button>
+                <button type="submit" class="btn btn-primary" @disabled($deliverables->isEmpty())>Salvar</button>
             </div>
         </form>
     </div>

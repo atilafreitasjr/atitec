@@ -6,12 +6,15 @@ use App\Http\Controllers\Admin\ConversationController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\LeadController;
+use App\Http\Controllers\Admin\ProjectBillingController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\ProjectKanbanController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Cliente\PortalController;
+use App\Http\Controllers\DocsController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProjectDocumentController;
 use App\Http\Controllers\SiteController;
 use App\Models\DeliverableTask;
 use Illuminate\Support\Facades\Route;
@@ -40,11 +43,20 @@ Route::domain('cartao.atitec.com.br')->group(function () {
     Route::get('/', [SiteController::class, 'cartao']);
 });
 
+// ---- Guia do Cliente (documentação do sistema) ----
+Route::get('docs/{page?}', [DocsController::class, 'show'])->name('docs.show');
+
 // ---- Pós-login: redireciona por perfil ----
 Route::get('/dashboard', function () {
-    $role = auth()->user()->role;
-    if (in_array($role, ['admin', 'gerente', 'financeiro'], true)) {
+    $user = auth()->user();
+
+    if (in_array($user->role, ['admin', 'gerente', 'financeiro'], true)) {
         return redirect()->route('admin.dashboard');
+    }
+
+    // Cliente sem cadastro completo (ex.: entrou pelo Google) informa os dados.
+    if (! $user->client_id) {
+        return redirect()->route('cadastro.completar');
     }
 
     return redirect()->route('cliente.dashboard');
@@ -79,10 +91,22 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:ad
     $resource('projects', ProjectController::class, 'project');
     $resource('clients', ClientController::class, 'client');
     $resource('invoices', InvoiceController::class, 'invoice');
+    Route::post('invoices/{invoice}/payments', [InvoiceController::class, 'paymentStore'])
+        ->name('invoices.payments.store')->middleware('permission:invoice.edit');
+    Route::put('invoices/{invoice}/payments/{payment}', [InvoiceController::class, 'paymentUpdate'])
+        ->name('invoices.payments.update')->middleware('permission:invoice.edit');
+    Route::delete('invoices/{invoice}/payments/{payment}', [InvoiceController::class, 'paymentDestroy'])
+        ->name('invoices.payments.destroy')->middleware('permission:invoice.edit');
+    Route::post('invoices/{invoice}/discount', [InvoiceController::class, 'discountStore'])
+        ->name('invoices.discount')->middleware('permission:invoice.edit');
     $resource('conversations', ConversationController::class, 'conversation', ['index', 'create', 'store', 'show', 'update', 'destroy']);
     Route::post('conversations/{conversation}/reopen', [ConversationController::class, 'reopen'])
         ->name('conversations.reopen')->middleware('permission:conversation.edit');
     $resource('leads', LeadController::class, 'lead', ['index', 'show', 'update', 'destroy']);
+    Route::post('leads/{lead}/proposal', [LeadController::class, 'sendProposal'])
+        ->name('leads.proposal')->middleware('permission:lead.edit');
+    Route::post('leads/{lead}/convert', [LeadController::class, 'convertToProject'])
+        ->name('leads.convert')->middleware(['permission:lead.edit', 'permission:project.create']);
     $resource('channels', ChannelController::class, 'channel', ['index', 'store', 'update', 'destroy']);
 
     // ---- Usuários e permissões (Spatie) ----
@@ -94,6 +118,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:ad
 
     // ---- Gestão por projeto: Kanban de entregas/tarefas (isolado por project_id) ----
     Route::prefix('projects/{project}')->name('projects.')->scopeBindings()->group(function () {
+        Route::post('documents', [ProjectDocumentController::class, 'store'])
+            ->name('documents.store')->middleware('permission:project.edit');
+        Route::delete('documents/{document}', [ProjectDocumentController::class, 'destroy'])
+            ->name('documents.destroy')->middleware('permission:project.edit');
+        Route::post('invoices/from-tasks', [ProjectBillingController::class, 'store'])
+            ->name('invoices.from-tasks')->middleware(['permission:invoice.create', 'permission:task.view']);
         Route::get('kanban', [ProjectKanbanController::class, 'kanban'])
             ->name('kanban')->middleware('permission:deliverable.view|task.view');
         Route::get('deliverables', [ProjectKanbanController::class, 'deliverablesIndex'])
@@ -113,15 +143,27 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:ad
     });
 });
 
+// Downloads privados: o controller verifica acesso staff ou propriedade do projeto/fatura.
+Route::middleware('auth')->group(function () {
+    Route::get('/documentos/projetos/{project}/{document}', [ProjectDocumentController::class, 'download'])
+        ->name('project-documents.download');
+    Route::get('/documentos/faturas/{invoice}/boleto', [InvoiceController::class, 'downloadPdf'])
+        ->name('invoices.pdf');
+});
+
 // ---- Portal do cliente ----
-Route::prefix('cliente')->name('cliente.')->middleware(['auth', 'verified'])->group(function () {
+Route::prefix('cliente')->name('cliente.')->middleware(['auth', 'verified', 'role:cliente'])->group(function () {
     Route::get('/', [PortalController::class, 'dashboard'])->name('dashboard');
     Route::get('/projetos', [PortalController::class, 'projetos'])->name('projetos');
     Route::get('/projetos/{id}', [PortalController::class, 'projeto'])->name('projeto');
     Route::get('/projetos/{id}/kanban', [PortalController::class, 'kanban'])->name('kanban');
     Route::get('/financeiro', [PortalController::class, 'financeiro'])->name('financeiro');
+    Route::get('/financeiro/{invoice}', [PortalController::class, 'fatura'])->name('fatura');
+    Route::get('/orcamentos', [PortalController::class, 'orcamentos'])->name('orcamentos');
+    Route::post('/orcamentos/{lead}/resposta', [PortalController::class, 'responderOrcamento'])->name('orcamentos.responder');
     Route::get('/mensagens', [PortalController::class, 'mensagens'])->name('mensagens');
     Route::post('/mensagens', [PortalController::class, 'mensagemStore'])->name('mensagens.store');
+    Route::get('/ajuda/{page?}', [DocsController::class, 'ajuda'])->name('ajuda');
 });
 
 require __DIR__.'/auth.php';

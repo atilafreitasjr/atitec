@@ -27,6 +27,7 @@ class Index extends Component
                     $q->where('name', 'like', "%{$this->search}%")
                         ->orWhere('description', 'like', "%{$this->search}%");
                 })
+                ->with(['tasks'])
                 ->withCount('tasks')
                 ->orderByRaw('start_date IS NULL')
                 ->orderBy('start_date')

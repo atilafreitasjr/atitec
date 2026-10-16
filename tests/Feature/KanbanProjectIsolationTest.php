@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Livewire\Kanban\Board;
+use App\Livewire\Task\Create;
 use App\Models\Client;
 use App\Models\Deliverable;
 use App\Models\DeliverableTask;
+use App\Models\Invoice;
 use App\Models\Project;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
@@ -91,6 +93,91 @@ class KanbanProjectIsolationTest extends TestCase
         $this->get(route('admin.projects.kanban', $projectA))->assertForbidden();
         $this->get(route('cliente.kanban', $projectA->id))->assertOk();
         $this->get(route('cliente.kanban', $projectB->id))->assertNotFound();
+    }
+
+    public function test_tela_de_nova_tarefa_orienta_criar_entrega_quando_projeto_sem_entregas(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $project = $this->makeProject('Projeto sem entregas');
+
+        $this->actingAs($admin)
+            ->get(route('admin.projects.tasks.create', $project))
+            ->assertOk()
+            ->assertSee('ainda não tem entregas')
+            ->assertSee('Criar entrega');
+    }
+
+    public function test_fases_do_projeto_usam_nova_nomenclatura(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $project = $this->makeProject('Projeto Fases');
+
+        $this->actingAs($admin)
+            ->get(route('admin.projects.tasks.create', $project))
+            ->assertOk()
+            ->assertSee('Fase do projeto')
+            ->assertSee('Proposta Enviada')
+            ->assertSee('Aceito em Espera')
+            ->assertSee('Em Produção');
+
+        $deliverable = Deliverable::create(['project_id' => $project->id, 'name' => 'Entrega', 'status' => 'andamento']);
+
+        Livewire::test(Create::class, ['projectId' => $project->id])
+            ->set('deliverable_id', $deliverable->id)
+            ->set('title', 'Tarefa em produção')
+            ->set('phase', '6')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame('6', DeliverableTask::where('title', 'Tarefa em produção')->value('phase'));
+
+        $this->get(route('admin.projects.kanban', $project))
+            ->assertOk()
+            ->assertSee('Em Produção');
+    }
+
+    public function test_kanban_usa_fases_como_colunas_e_move_tarefas_entre_fases(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $client = Client::create(['name' => 'Cliente Kanban', 'email' => 'kanban@teste.com']);
+        $project = $this->makeProject('Projeto Fases Kanban', $client);
+        $deliverable = Deliverable::create(['project_id' => $project->id, 'name' => 'Entrega', 'status' => 'andamento']);
+        $task = DeliverableTask::create([
+            'project_id' => $project->id,
+            'deliverable_id' => $deliverable->id,
+            'title' => 'Tarefa entre fases',
+            'status' => 'pendente',
+            'priority' => 'media',
+        ]);
+
+        $this->actingAs($admin)->get(route('admin.projects.kanban', $project))
+            ->assertOk()
+            ->assertSeeInOrder(['Sem fase', 'Planejamento', 'Proposta Enviada', 'Aceito em Espera', 'Desenvolvimento', 'Concluído', 'Em Produção']);
+
+        $board = fn () => Livewire::test(Board::class, ['projectId' => $project->id]);
+
+        $board()->call('moveTask', $task->id, 'up');
+        $this->assertSame('1', $task->fresh()->phase);
+
+        $board()->call('moveTask', $task->id, 'up')->call('moveTask', $task->id, 'up');
+        $this->assertSame('3', $task->fresh()->phase);
+
+        $board()->call('moveTask', $task->id, 'down');
+        $this->assertSame('2', $task->fresh()->phase);
+
+        $invoice = Invoice::create([
+            'client_id' => $client->id,
+            'project_id' => $project->id,
+            'title' => 'Fatura da tarefa',
+            'amount' => 100,
+            'due_date' => today()->addDays(5),
+            'status' => 'pendente',
+            'type' => 'projeto',
+        ]);
+        $task->update(['invoice_id' => $invoice->id]);
+
+        $board()->call('moveTask', $task->id, 'down');
+        $this->assertSame('2', $task->fresh()->phase);
     }
 
     public function test_rotas_exigem_permissao(): void

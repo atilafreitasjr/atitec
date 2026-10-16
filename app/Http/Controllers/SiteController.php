@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Channel;
+use App\Models\Client;
 use App\Models\Lead;
 use App\Models\Project;
 use Illuminate\Http\RedirectResponse;
@@ -15,8 +16,8 @@ class SiteController extends Controller
     public function home(): View
     {
         return view('site.home', [
-            'featured' => Project::where('featured', true)->orderBy('sort_order')->take(6)->get(),
-            'projects' => Project::orderBy('sort_order')->take(7)->get(),
+            'featured' => Project::where('featured', true)->where('status', '!=', 'arquivado')->orderBy('sort_order')->take(6)->get(),
+            'projects' => Project::where('status', '!=', 'arquivado')->orderBy('sort_order')->take(7)->get(),
             'channels' => Channel::where('active', true)->orderBy('sort_order')->get(),
         ]);
     }
@@ -57,30 +58,31 @@ class SiteController extends Controller
     public function portfolio(): View
     {
         return view('site.portfolio', [
-            'projects' => Project::orderBy('sort_order')->get(),
+            'projects' => Project::where('status', '!=', 'arquivado')->orderBy('sort_order')->get(),
         ]);
     }
 
     public function case(string $slug): View
     {
-        $project = Project::where('slug', $slug)->firstOrFail();
+        $project = Project::where('slug', $slug)->where('status', '!=', 'arquivado')->firstOrFail();
 
         return view('site.case', [
             'project' => $project,
-            'others' => Project::where('id', '!=', $project->id)->orderBy('sort_order')->take(3)->get(),
+            'others' => Project::where('id', '!=', $project->id)->where('status', '!=', 'arquivado')->orderBy('sort_order')->take(3)->get(),
         ]);
     }
 
-    public function contato(): View
+    public function contato(Request $request): View
     {
         return view('site.contato', [
             'channels' => Channel::where('active', true)->orderBy('sort_order')->get(),
+            'prefill' => $this->contactPrefill($request),
         ]);
     }
 
-    public function orcamento(): View
+    public function orcamento(Request $request): View
     {
-        return view('site.orcamento');
+        return view('site.orcamento', ['prefill' => $this->contactPrefill($request)]);
     }
 
     public function orcamentoStore(Request $request): RedirectResponse
@@ -95,7 +97,12 @@ class SiteController extends Controller
             'details' => ['required', 'string', 'max:5000'],
         ]);
 
-        Lead::create([...$data, 'status' => 'novo', 'source' => 'site/orcamento']);
+        Lead::create([
+            ...$data,
+            'client_id' => $this->clientIdForLead($request, $data['email']),
+            'status' => 'novo',
+            'source' => 'site/orcamento',
+        ]);
 
         return redirect()->route('site.orcamento')
             ->with('success', 'Pedido de orçamento recebido! A ATITEC retornará em breve pelos seus contatos.');
@@ -113,6 +120,7 @@ class SiteController extends Controller
         Lead::create([
             'name' => $data['name'],
             'email' => $data['email'],
+            'client_id' => $this->clientIdForLead($request, $data['email']),
             'phone' => $data['phone'] ?? null,
             'details' => $data['details'],
             'project_type' => 'contato',
@@ -124,13 +132,14 @@ class SiteController extends Controller
             ->with('success', 'Mensagem enviada com sucesso! Retornaremos em breve.');
     }
 
-    public function cartao(): View
+    public function cartao(Request $request): View
     {
         $channels = Channel::where('active', true)->orderBy('sort_order')->get()->keyBy('type');
 
         return view('site.cartao', [
             'channels' => $channels,
-            'projects' => Project::orderBy('sort_order')->get(),
+            'projects' => Project::where('status', '!=', 'arquivado')->orderBy('sort_order')->get(),
+            'prefill' => $this->contactPrefill($request),
             'card' => [
                 'name' => config('card.name'),
                 'role' => config('card.role'),
@@ -152,6 +161,7 @@ class SiteController extends Controller
         Lead::create([
             'name' => $data['name'],
             'email' => $data['email'] ?? '',
+            'client_id' => ! empty($data['email']) ? $this->clientIdForLead($request, $data['email']) : $request->user()?->client_id,
             'phone' => $data['phone'],
             'details' => $data['details'] ?? null,
             'project_type' => 'cartao',
@@ -184,5 +194,30 @@ class SiteController extends Controller
         return response()->streamDownload(function () use ($vcf) {
             echo $vcf;
         }, $filename, ['Content-Type' => 'text/vcard']);
+    }
+
+    /** Dados já conhecidos para reduzir digitação nos formulários públicos. */
+    private function contactPrefill(Request $request): array
+    {
+        $user = $request->user();
+        $client = $user?->client;
+
+        return [
+            'name' => $client?->name ?? $user?->name ?? '',
+            'email' => $client?->email ?? $user?->email ?? '',
+            'phone' => $client?->phone ?? '',
+            'company' => $client?->company ?? '',
+        ];
+    }
+
+    private function clientIdForLead(Request $request, string $email): ?int
+    {
+        $user = $request->user();
+
+        if ($user?->role === 'cliente' && $user->client_id) {
+            return (int) $user->client_id;
+        }
+
+        return Client::where('email', strtolower($email))->value('id');
     }
 }

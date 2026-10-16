@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\CompleteClientRegistrationController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
+use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
@@ -22,6 +24,10 @@ Route::middleware('guest')->group(function () {
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
+    // Login/cadastro com Google (OAuth 2.0).
+    Route::get('auth/google', [GoogleController::class, 'redirect'])->name('auth.google.redirect');
+    Route::get('auth/google/callback', [GoogleController::class, 'callback'])->name('auth.google.callback');
+
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');
 
@@ -36,6 +42,12 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    // Completa os dados de cliente de quem entrou pelo Google (sem CPF/endereço ainda).
+    Route::get('cadastro/completar', [CompleteClientRegistrationController::class, 'show'])
+        ->name('cadastro.completar');
+    Route::post('cadastro/completar', [CompleteClientRegistrationController::class, 'store'])
+        ->name('cadastro.completar.store');
+
     Route::get('verify-email', EmailVerificationPromptController::class)
         ->name('verification.notice');
 

@@ -16,10 +16,13 @@
     <form method="POST" action="{{ route('site.contato.store') }}" class="bg-[#1A1D21] border border-white/10 rounded-2xl p-6 space-y-4">
         @csrf
         @if($errors->any())<div class="bg-red-900/50 border border-red-500/40 text-sm rounded-lg p-3">{{ $errors->first() }}</div>@endif
-        <div><label class="text-sm font-medium">Nome*</label><input name="name" required value="{{ old('name') }}" class="mt-1 w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-sm"></div>
+        @auth
+            @if(auth()->user()->client)<p class="rounded-lg border border-[#FFFF5D]/20 bg-[#FFFF5D]/5 px-3 py-2 text-xs text-gray-300">Seus dados do workspace já foram preenchidos. Você pode editá-los se necessário.</p>@endif
+        @endauth
+        <div><label class="text-sm font-medium">Nome*</label><input name="name" required value="{{ old('name', $prefill['name']) }}" autocomplete="name" class="mt-1 w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-sm"></div>
         <div class="grid sm:grid-cols-2 gap-4">
-            <div><label class="text-sm font-medium">E-mail*</label><input name="email" type="email" required value="{{ old('email') }}" class="mt-1 w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-sm"></div>
-            <div><label class="text-sm font-medium">Telefone/WhatsApp</label><input name="phone" value="{{ old('phone') }}" class="mt-1 w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-sm"></div>
+            <div><label class="text-sm font-medium">E-mail*</label><input name="email" type="email" required value="{{ old('email', $prefill['email']) }}" autocomplete="email" class="mt-1 w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-sm"></div>
+            <div><label class="text-sm font-medium">Telefone/WhatsApp</label><input name="phone" value="{{ old('phone', $prefill['phone']) }}" inputmode="tel" maxlength="15" data-mask="phone" placeholder="(00) 00000-0000" autocomplete="tel" class="mt-1 w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-sm"></div>
         </div>
         <div><label class="text-sm font-medium">Mensagem*</label><textarea name="details" rows="5" required class="mt-1 w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-sm">{{ old('details') }}</textarea></div>
         <button class="w-full bg-[#FFFF5D] text-black font-semibold py-3 rounded-lg hover:bg-[#FFD400]">Enviar mensagem</button>

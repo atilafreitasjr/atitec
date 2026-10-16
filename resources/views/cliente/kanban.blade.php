@@ -1,13 +1,25 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Acompanhamento — {{ $project->title }}</h2>
-            <a href="{{ route('cliente.projeto', $project->id) }}" class="text-sm text-indigo-600">← voltar ao projeto</a>
+@extends('adminlte::page')
+
+@section('title', 'Kanban — '.$project->title)
+
+@section('content_header')
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <a href="{{ route('cliente.projeto', $project->id) }}" class="small">← Voltar ao projeto</a>
+            <h1 class="mb-0">Acompanhamento — {{ $project->title }}</h1>
         </div>
-    </x-slot>
-    <div class="py-8">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            @livewire('kanban.board', ['projectId' => $project->id, 'readonly' => true])
-        </div>
+        <span class="badge text-bg-warning fs-6">Somente leitura</span>
     </div>
-</x-app-layout>
+@stop
+
+@section('content')
+    @livewire('kanban.board', ['projectId' => $project->id, 'readonly' => true])
+@stop
+
+@section('css')
+    @livewireStyles
+@stop
+
+@section('js')
+    @livewireScripts
+@stop

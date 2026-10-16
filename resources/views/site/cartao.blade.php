@@ -93,9 +93,12 @@
             <form method="POST" action="{{ $siteUrl }}/cartao/contato" class="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3.5">
                 @csrf
                 @if($errors->any())<div class="bg-red-900/50 border border-red-500/40 text-sm rounded-lg p-3">{{ $errors->first() }}</div>@endif
-                <div><label class="text-sm font-medium">Nome*</label><input name="name" required value="{{ old('name') }}" placeholder="Seu nome" class="mt-1 w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-3 text-sm"></div>
-                <div><label class="text-sm font-medium">Telefone / WhatsApp*</label><input name="phone" required value="{{ old('phone') }}" placeholder="(00) 90000-0000" class="mt-1 w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-3 text-sm"></div>
-                <div><label class="text-sm font-medium">E-mail</label><input name="email" type="email" value="{{ old('email') }}" placeholder="voce@email.com" class="mt-1 w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-3 text-sm"></div>
+                @auth
+                    @if(auth()->user()->client)<p class="rounded-lg border border-[#FFFF5D]/20 bg-[#FFFF5D]/5 px-3 py-2 text-xs text-gray-300">Seus dados cadastrados foram preenchidos automaticamente.</p>@endif
+                @endauth
+                <div><label class="text-sm font-medium">Nome*</label><input name="name" required value="{{ old('name', $prefill['name']) }}" autocomplete="name" placeholder="Seu nome" class="mt-1 w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-3 text-sm"></div>
+                <div><label class="text-sm font-medium">Telefone / WhatsApp*</label><input name="phone" required value="{{ old('phone', $prefill['phone']) }}" placeholder="(00) 90000-0000" inputmode="tel" maxlength="15" data-mask="phone" autocomplete="tel" class="mt-1 w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-3 text-sm"></div>
+                <div><label class="text-sm font-medium">E-mail</label><input name="email" type="email" value="{{ old('email', $prefill['email']) }}" placeholder="voce@email.com" autocomplete="email" class="mt-1 w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-3 text-sm"></div>
                 <div><label class="text-sm font-medium">Mensagem</label><textarea name="details" rows="3" placeholder="Como posso ajudar?" class="mt-1 w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-3 text-sm">{{ old('details') }}</textarea></div>
                 <button class="w-full bg-[#FFFF5D] text-black font-bold py-3.5 rounded-xl hover:bg-[#FFD400] active:scale-[0.99] transition">Enviar contato</button>
             </form>

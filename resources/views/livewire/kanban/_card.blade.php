@@ -1,9 +1,12 @@
 @php
     $readonly = $readonly ?? false;
-    $isConcluido = $column === 'concluido';
+    $isConcluido = $column === '5';
     $borderClass = match($column) {
-        'andamento' => 'border-info',
-        'concluido' => 'border-success',
+        '2' => 'border-info',
+        '3' => 'border-warning',
+        '4' => 'border-primary',
+        '5' => 'border-success',
+        '6' => 'border-dark',
         default => '',
     };
     $priorityClass = match($task->priority) {
@@ -20,11 +23,11 @@
 
             @unless($readonly)
             <div class="d-flex flex-column gap-0" x-on:click.stop>
-                @if($column !== 'concluido')
-                    <button wire:click="moveTask({{ $task->id }}, 'up')" class="btn btn-sm btn-link text-muted p-0" title="Mover para próxima coluna">▲</button>
+                @if($column !== '6')
+                    <button wire:click="moveTask({{ $task->id }}, 'up')" class="btn btn-sm btn-link text-muted p-0" title="Avançar para a próxima fase">▲</button>
                 @endif
-                @if($column !== 'pendente')
-                    <button wire:click="moveTask({{ $task->id }}, 'down')" class="btn btn-sm btn-link text-muted p-0" title="Mover para coluna anterior">▼</button>
+                @if($column !== '1' && $column !== 'sem_fase')
+                    <button wire:click="moveTask({{ $task->id }}, 'down')" class="btn btn-sm btn-link text-muted p-0" title="Voltar para a fase anterior">▼</button>
                 @endif
                 <button x-on:click.stop="if(confirm('Remover tarefa?')) { $wire.deleteTask({{ $task->id }}); }" class="btn btn-sm btn-link text-danger p-0" title="Excluir">✕</button>
             </div>
@@ -64,7 +67,7 @@
         </button>
         <div x-show="expanded" class="text-start small text-muted px-2 pb-2">
             @if($task->deliverable)<div class="d-flex justify-content-between"><span>Entrega:</span><strong>{{ $task->deliverable->name }}</strong></div>@endif
-            @if($task->phase)<div class="d-flex justify-content-between"><span>Fase:</span><strong>{{ $task->phase }}</strong></div>@endif
+            @if($task->phase)<div class="d-flex justify-content-between"><span>Fase:</span><strong>{{ \App\Models\DeliverableTask::PHASES[$task->phase] ?? $task->phase }}</strong></div>@endif
             @if($task->hours_estimated)<div class="d-flex justify-content-between"><span>Horas previstas:</span><strong>{{ number_format($task->hours_estimated, 1, ',', '.') }}h</strong></div>@endif
             @if($task->hours_actual)<div class="d-flex justify-content-between"><span>Horas realizadas:</span><strong>{{ number_format($task->hours_actual, 1, ',', '.') }}h</strong></div>@endif
             @if($task->cost_estimated)<div class="d-flex justify-content-between"><span>Custo estimado:</span><strong>R$ {{ number_format($task->cost_estimated, 2, ',', '.') }}</strong></div>@endif

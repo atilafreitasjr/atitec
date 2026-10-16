@@ -7,6 +7,8 @@
 @stop
 
 @section('content')
+    @use('App\Support\PasswordPolicy')
+
     @if($errors->any())<x-adminlte-alert theme="danger" title="Verifique os campos">{{ $errors->first() }}</x-adminlte-alert>@endif
 
     <div class="row">
@@ -22,9 +24,12 @@
 
                     <div class="row">
                         <div class="col-md-6">
-                            <x-adminlte-input name="password" type="password" label="Senha {{ $user->exists ? '(deixe vazio para manter)' : '' }}" autocomplete="new-password"/>
+                            <x-adminlte-password-input name="password" label="Senha {{ $user->exists ? '(deixe vazio para manter)' : '' }}"
+                                                       autocomplete="new-password" :rules="PasswordPolicy::checks()"/>
                         </div>
-                        <div class="col-md-6"><x-adminlte-input name="password_confirmation" type="password" label="Confirmar senha" autocomplete="new-password"/></div>
+                        <div class="col-md-6">
+                            <x-adminlte-password-input name="password_confirmation" label="Confirmar senha" autocomplete="new-password"/>
+                        </div>
                     </div>
 
                     <div class="row">

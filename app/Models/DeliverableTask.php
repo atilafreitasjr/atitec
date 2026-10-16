@@ -18,10 +18,20 @@ class DeliverableTask extends Model
 
     public const PRIORITIES = ['baixa', 'media', 'alta'];
 
+    /** Fases do projeto exibidas no formulário de tarefa e no filtro do Kanban. */
+    public const PHASES = [
+        '1' => 'Planejamento',
+        '2' => 'Proposta Enviada',
+        '3' => 'Aceito em Espera',
+        '4' => 'Desenvolvimento',
+        '5' => 'Concluído',
+        '6' => 'Em Produção',
+    ];
+
     protected $fillable = [
         'project_id', 'deliverable_id', 'phase', 'user_id', 'title',
         'description', 'status', 'priority', 'due_date', 'start_date',
-        'end_date', 'hours_estimated', 'hours_actual', 'hourly_rate',
+        'end_date', 'hours_estimated', 'hours_actual', 'hourly_rate', 'invoice_id',
         'order', 'tags',
     ];
 
@@ -31,6 +41,8 @@ class DeliverableTask extends Model
             'due_date' => 'date',
             'start_date' => 'date',
             'end_date' => 'date',
+            'hours_estimated' => 'decimal:2',
+            'hours_actual' => 'decimal:2',
             'hourly_rate' => 'decimal:2',
         ];
     }
@@ -60,21 +72,22 @@ class DeliverableTask extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function invoice(): BelongsTo
+    {
+        return $this->belongsTo(Invoice::class);
+    }
+
     public function getCostEstimatedAttribute(): ?float
     {
-        if ($this->hours_estimated && $this->hourly_rate) {
-            return (float) $this->hours_estimated * (float) $this->hourly_rate;
-        }
-
-        return null;
+        return $this->hours_estimated !== null && $this->hourly_rate !== null
+            ? round((float) $this->hours_estimated * (float) $this->hourly_rate, 2)
+            : null;
     }
 
     public function getCostActualAttribute(): ?float
     {
-        if ($this->hours_actual && $this->hourly_rate) {
-            return (float) $this->hours_actual * (float) $this->hourly_rate;
-        }
-
-        return null;
+        return $this->hours_actual !== null && $this->hourly_rate !== null
+            ? round((float) $this->hours_actual * (float) $this->hourly_rate, 2)
+            : null;
     }
 }

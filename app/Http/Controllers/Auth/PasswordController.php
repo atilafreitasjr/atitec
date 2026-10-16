@@ -15,8 +15,10 @@ class PasswordController extends Controller
      */
     public function update(Request $request): RedirectResponse
     {
+        // Quem entrou apenas com o Google não tem senha atual: pode definir a
+        // primeira senha sem informar a anterior (e passa a logar sem o Google).
         $validated = $request->validateWithBag('updatePassword', [
-            'current_password' => ['required', 'current_password'],
+            'current_password' => [$request->user()->password !== null ? 'required' : 'nullable', 'current_password'],
             'password' => ['required', Password::defaults(), 'confirmed'],
         ]);
 

@@ -15,7 +15,7 @@ class ProjectController extends Controller
     public function index(): View
     {
         return view('admin.projects.index', [
-            'projects' => Project::with('client')->orderBy('sort_order')->paginate(15),
+            'projects' => Project::with('client')->withCount(['deliverables', 'invoices'])->orderBy('sort_order')->paginate(15),
         ]);
     }
 
@@ -41,7 +41,7 @@ class ProjectController extends Controller
     public function show(Project $project): View
     {
         return view('admin.projects.show', [
-            'project' => $project->load(['client', 'tasks', 'invoices']),
+            'project' => $project->load(['client', 'tasks', 'invoices', 'deliverables.tasks.invoice', 'documents.uploader']),
         ]);
     }
 
@@ -66,6 +66,12 @@ class ProjectController extends Controller
 
     public function destroy(Project $project): RedirectResponse
     {
+        if ($project->invoices()->exists() || $project->documents()->exists() || $project->deliverables()->exists() || $project->tasks()->exists()) {
+            return back()->withErrors([
+                'project' => 'Este projeto possui entregas, tarefas, documentos ou cobranças. Altere o status para arquivar o histórico.',
+            ]);
+        }
+
         $project->delete();
 
         return redirect()->route('admin.projects.index')->with('success', 'Projeto excluído.');

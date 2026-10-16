@@ -3,13 +3,13 @@
         <form wire:submit="save" class="card-body">
             <div class="mb-3">
                 <label class="form-label">Título</label>
-                <input type="text" wire:model="title" class="form-control">
+                <input type="text" wire:model="title" class="form-control" @disabled($task->invoice_id)>
                 @error('title') <span class="text-danger small">{{ $message }}</span> @enderror
             </div>
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Entrega *</label>
-                    <select wire:model="deliverable_id" class="form-select">
+                    <select wire:model="deliverable_id" class="form-select" @disabled($task->invoice_id)>
                         @foreach($deliverables as $deliverable)
                             <option value="{{ $deliverable->id }}">{{ $deliverable->name }}</option>
                         @endforeach
@@ -28,28 +28,32 @@
             </div>
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">Fase</label>
+                    <label class="form-label">Fase do projeto</label>
                     <select wire:model="phase" class="form-select">
                         <option value="">Selecione</option>
-                        <option value="1">Fase 1 — Planejamento e Diagnóstico</option>
-                        <option value="2">Fase 2 — Capacitação e Materiais</option>
-                        <option value="3">Fase 3 — Acompanhamento e Articulação</option>
-                        <option value="4">Fase 4 — Sistematização e Encerramento</option>
+                        @foreach(\App\Models\DeliverableTask::PHASES as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Situação</label>
-                    <select wire:model="status" class="form-select">
+                    <select wire:model="status" class="form-select" @disabled($task->invoice_id)>
                         <option value="pendente">Pendente</option>
                         <option value="andamento">Em Andamento</option>
                         <option value="concluido">Concluído</option>
                     </select>
+                    @error('status') <span class="text-danger small">{{ $message }}</span> @enderror
                 </div>
             </div>
             <div class="mb-3">
                 <label class="form-label">Descrição</label>
                 <textarea wire:model="description" rows="3" class="form-control"></textarea>
             </div>
+            @error('financial')<div class="alert alert-danger">{{ $message }}</div>@enderror
+            @if($task->invoice_id)
+                <div class="alert alert-info small">Esta tarefa já foi faturada. Horas realizadas e valor/hora ficam protegidos para manter o valor da fatura consistente.</div>
+            @endif
             <div class="row">
                 <div class="col-md-4 mb-3">
                     <label class="form-label">Prioridade</label>
@@ -65,7 +69,7 @@
                 </div>
                 <div class="col-md-4 mb-3">
                     <label class="form-label">Valor hora (R$)</label>
-                    <input type="number" step="0.01" wire:model="hourly_rate" class="form-control">
+                    <input type="number" step="0.01" wire:model="hourly_rate" class="form-control" @disabled($task->invoice_id)>
                 </div>
             </div>
             <div class="row">
@@ -86,7 +90,7 @@
                 </div>
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Horas realizadas</label>
-                    <input type="number" step="0.5" wire:model="hours_actual" class="form-control">
+                    <input type="number" step="0.5" wire:model="hours_actual" class="form-control" @disabled($task->invoice_id)>
                 </div>
             </div>
             <div class="d-flex justify-content-end gap-2">

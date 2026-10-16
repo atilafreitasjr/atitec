@@ -108,15 +108,26 @@ class Board extends Component
             });
     }
 
-    public function getTasksByStatusProperty()
+    /** Tarefas agrupadas por fase do projeto (colunas do Kanban). */
+    public function getTasksByPhaseProperty()
     {
-        $query = $this->filteredTasksQuery;
+        $columns = collect(DeliverableTask::PHASES)
+            ->mapWithKeys(fn ($label, $phase) => [(string) $phase => collect()]);
 
-        return collect([
-            'pendente' => (clone $query)->where('status', 'pendente')->orderByRaw("FIELD(priority, 'alta', 'media', 'baixa')")->orderByRaw('due_date IS NULL')->orderBy('due_date')->orderBy('order')->get(),
-            'andamento' => (clone $query)->where('status', 'andamento')->orderByRaw("FIELD(priority, 'alta', 'media', 'baixa')")->orderByRaw('due_date IS NULL')->orderBy('due_date')->orderBy('order')->get(),
-            'concluido' => (clone $query)->where('status', 'concluido')->orderByRaw("FIELD(priority, 'alta', 'media', 'baixa')")->orderByRaw('due_date IS NULL')->orderBy('due_date')->orderBy('order')->get(),
-        ]);
+        $columns->put('sem_fase', collect());
+
+        $this->filteredTasksQuery
+            ->orderByRaw("FIELD(priority, 'alta', 'media', 'baixa')")
+            ->orderByRaw('due_date IS NULL')
+            ->orderBy('due_date')
+            ->orderBy('order')
+            ->get()
+            ->each(function (DeliverableTask $task) use ($columns) {
+                $phase = $task->phase !== null ? (string) $task->phase : 'sem_fase';
+                $columns[$columns->has($phase) ? $phase : 'sem_fase']->push($task);
+            });
+
+        return $columns;
     }
 
     public function hasActiveFilters(): bool
@@ -161,9 +172,21 @@ class Board extends Component
         // Revalida o escopo: a tarefa precisa pertencer a este projeto.
         $task = DeliverableTask::where('project_id', $this->projectId)->findOrFail($this->editingTask->id);
 
+        if ($task->invoice_id && $this->taskTitle !== $task->title) {
+            $this->addError('taskTitle', 'O título de uma tarefa faturada não pode ser alterado.');
+
+            return;
+        }
+
         $this->validate([
             'taskTitle' => 'required|min:3',
         ]);
+
+        if ($task->invoice_id && $this->taskStatus !== 'concluido') {
+            $this->addError('taskStatus', 'Uma tarefa faturada não pode voltar para uma etapa anterior.');
+
+            return;
+        }
 
         $task->update([
             'title' => $this->taskTitle,
@@ -178,33 +201,35 @@ class Board extends Component
         session()->flash('message', 'Tarefa atualizada.');
     }
 
-    private array $statusOrder = ['pendente', 'andamento', 'concluido'];
-
     public function moveTask($taskId, $direction)
     {
         $this->authorizeKanban('task.edit');
 
         $task = DeliverableTask::where('project_id', $this->projectId)->findOrFail($taskId);
+        $phases = array_map('strval', array_keys(DeliverableTask::PHASES));
 
-        $currentIndex = array_search($task->status, $this->statusOrder);
-        if ($currentIndex === false) {
+        if ($task->invoice_id && $direction === 'down') {
+            session()->flash('message', 'Esta tarefa já está vinculada a uma fatura e não pode voltar de fase.');
+
             return;
         }
+
+        $currentIndex = $task->phase !== null ? array_search((string) $task->phase, $phases, true) : -1;
+        $currentIndex = $currentIndex === false ? -1 : $currentIndex;
 
         $newIndex = $direction === 'up' ? $currentIndex + 1 : $currentIndex - 1;
 
-        if ($newIndex < 0 || $newIndex >= count($this->statusOrder)) {
+        if ($newIndex < 0 || $newIndex >= count($phases)) {
             return;
         }
 
-        $newStatus = $this->statusOrder[$newIndex];
         $maxOrder = DeliverableTask::where('project_id', $this->projectId)
-            ->where('status', $newStatus)
             ->where('deliverable_id', $task->deliverable_id)
+            ->where('phase', $phases[$newIndex])
             ->max('order') ?? 0;
 
         $task->update([
-            'status' => $newStatus,
+            'phase' => $phases[$newIndex],
             'order' => $maxOrder + 1,
         ]);
     }
@@ -223,6 +248,7 @@ class Board extends Component
             'title' => $this->newTaskTitle,
             'status' => 'pendente',
             'priority' => 'media',
+            'phase' => $this->selectedPhase !== null && $this->selectedPhase !== '' ? (string) $this->selectedPhase : '1',
             'order' => $maxOrder + 1,
         ]);
 
@@ -235,7 +261,15 @@ class Board extends Component
     {
         $this->authorizeKanban('task.delete');
 
-        DeliverableTask::where('project_id', $this->projectId)->findOrFail($taskId)->delete();
+        $task = DeliverableTask::where('project_id', $this->projectId)->findOrFail($taskId);
+
+        if ($task->invoice_id) {
+            session()->flash('message', 'Uma tarefa vinculada a uma fatura não pode ser removida.');
+
+            return;
+        }
+
+        $task->delete();
         session()->flash('message', 'Tarefa removida.');
     }
 
@@ -257,7 +291,7 @@ class Board extends Component
     public function render()
     {
         return view('livewire.kanban.board', [
-            'tasksByStatus' => $this->tasksByStatus,
+            'tasksByPhase' => $this->tasksByPhase,
         ]);
     }
 }

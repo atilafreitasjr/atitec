@@ -9,3 +9,123 @@
     --color-atitec-ice: #f3ffdc;
     --font-display: "Montserrat", "Inter", sans-serif;
 }
+
+.workspace-page-header .text-gray-900,
+.workspace-page-header .text-gray-800 {
+    color: #f3ffdc !important;
+}
+
+.workspace-page-header .text-gray-500 {
+    color: #c2c6b8 !important;
+}
+
+/* Guia do Cliente (central de ajuda): markdown sobre cartão branco */
+.doc-content {
+    color: #374151;
+    line-height: 1.7;
+}
+
+.doc-content h1 {
+    margin-bottom: .75rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.doc-content h2 {
+    margin-top: 1.75rem;
+    margin-bottom: .6rem;
+    padding-bottom: .3rem;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.doc-content h3 {
+    margin-top: 1.25rem;
+    margin-bottom: .5rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.doc-content p,
+.doc-content ul,
+.doc-content ol {
+    margin-bottom: .9rem;
+}
+
+.doc-content ul {
+    list-style: disc;
+    padding-left: 1.25rem;
+}
+
+.doc-content ol {
+    list-style: decimal;
+    padding-left: 1.25rem;
+}
+
+.doc-content a {
+    color: #7c6f00;
+    text-decoration: underline;
+}
+
+.doc-content strong {
+    color: #111827;
+}
+
+.doc-content table {
+    width: 100%;
+    margin-bottom: 1rem;
+    border-collapse: collapse;
+    font-size: .9rem;
+}
+
+.doc-content th,
+.doc-content td {
+    padding: .5rem .65rem;
+    border: 1px solid #e5e7eb;
+    text-align: left;
+    vertical-align: top;
+}
+
+.doc-content thead th {
+    background: #f9fafb;
+    color: #111827;
+}
+
+.doc-content code {
+    padding: .12rem .35rem;
+    border-radius: .25rem;
+    background: #f3f4f6;
+    font-size: .85em;
+    color: #111827;
+}
+
+.doc-content pre {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-radius: .6rem;
+    background: #111827;
+    color: #f9fafb;
+    overflow: auto;
+}
+
+.doc-content pre code {
+    padding: 0;
+    background: none;
+    color: inherit;
+}
+
+.doc-content blockquote {
+    margin: 0 0 1rem;
+    padding: .25rem 0 .25rem 1rem;
+    border-left: 4px solid #d4d400;
+    color: #4b5563;
+}
+
+.doc-content hr {
+    margin: 1.5rem 0;
+    border-color: #e5e7eb;
+}

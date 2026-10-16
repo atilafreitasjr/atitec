@@ -141,13 +141,13 @@ return [
     'demo' => false,
     'demo_middleware' => ['web', 'auth'],
 
-    // In-app documentation viewer: renders this package's docs/*.md files at
-    // /docs and /docs/{page}. Set 'docs' => false to disable the route.
-    'docs' => true,
+    // Documentação do pacote desativada: /docs agora serve o Guia do Cliente
+    // do sistema (App\Http\Controllers\DocsController + resources/docs).
+    'docs' => false,
     'docs_middleware' => ['web'],
 
     'sidebar_breakpoint' => 'lg',     // sidebar-expand-{breakpoint}
-    'sidebar_mini' => true,           // .sidebar-mini
+    'sidebar_mini' => false,          // Menu expandido para melhorar descoberta e leitura.
     'sidebar_collapse' => false,      // start collapsed
     'sidebar_collapse_auto_size' => false,
     'sidebar_scrollbar_theme' => 'os-theme-light',
@@ -174,10 +174,10 @@ return [
 
     'sidebar_theme' => 'dark',  // 'dark' | 'light'
 
-    'primary_color' => null,    // brand colour: links, .btn-primary, --bs-primary
-    'sidebar_color' => null,    // .app-sidebar background
-    'navbar_color' => null,     // .app-header background
-    'footer_color' => null,     // .app-footer background
+    'primary_color' => '#FFFF5D',
+    'sidebar_color' => '#101113',
+    'navbar_color' => '#0A0A0B',
+    'footer_color' => '#0A0A0B',
 
     /*
     |--------------------------------------------------------------------------
@@ -206,7 +206,7 @@ return [
     |
     */
 
-    'color_mode_toggle' => true,
+    'color_mode_toggle' => false,
 
     /*
     |--------------------------------------------------------------------------
@@ -236,18 +236,18 @@ return [
         ['text' => 'Ver site', 'url' => '/', 'icon' => 'bi bi-globe', 'target' => '_blank'],
 
         ['header' => 'COMERCIAL'],
-        ['text' => 'Leads / Orçamentos', 'route' => 'admin.leads.index', 'icon' => 'bi bi-funnel'],
-        ['text' => 'Clientes', 'route' => 'admin.clients.index', 'icon' => 'bi bi-people'],
+        ['text' => 'Leads / Orçamentos', 'route' => 'admin.leads.index', 'icon' => 'bi bi-funnel', 'can' => 'lead.view'],
+        ['text' => 'Clientes', 'route' => 'admin.clients.index', 'icon' => 'bi bi-people', 'can' => 'client.view'],
 
         ['header' => 'PROJETOS'],
-        ['text' => 'Projetos', 'route' => 'admin.projects.index', 'icon' => 'bi bi-kanban'],
+        ['text' => 'Projetos', 'route' => 'admin.projects.index', 'icon' => 'bi bi-kanban', 'can' => 'project.view'],
 
         ['header' => 'FINANCEIRO'],
-        ['text' => 'Faturas e cobranças', 'route' => 'admin.invoices.index', 'icon' => 'bi bi-receipt'],
+        ['text' => 'Faturas e cobranças', 'route' => 'admin.invoices.index', 'icon' => 'bi bi-receipt', 'can' => 'invoice.view'],
 
         ['header' => 'COMUNICAÇÃO'],
-        ['text' => 'Mensagens', 'route' => 'admin.conversations.index', 'icon' => 'bi bi-chat-dots'],
-        ['text' => 'Canais de contato', 'route' => 'admin.channels.index', 'icon' => 'bi bi-megaphone'],
+        ['text' => 'Mensagens', 'route' => 'admin.conversations.index', 'icon' => 'bi bi-chat-dots', 'can' => 'conversation.view'],
+        ['text' => 'Canais de contato', 'route' => 'admin.channels.index', 'icon' => 'bi bi-megaphone', 'can' => 'channel.view'],
 
         ['header' => 'ACESSO'],
         ['text' => 'Usuários', 'route' => 'admin.users.index', 'icon' => 'bi bi-person-badge', 'can' => 'user.view'],

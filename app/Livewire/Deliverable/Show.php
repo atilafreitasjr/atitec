@@ -43,6 +43,13 @@ class Show extends Component
 
         abort_unless(in_array($status, ['pendente', 'andamento', 'concluido'], true), 422);
         $task = $this->deliverable->tasks()->where('project_id', $this->projectId)->findOrFail($taskId);
+
+        if ($task->invoice_id && $status !== 'concluido') {
+            session()->flash('message', 'Uma tarefa vinculada a uma fatura não pode voltar para uma etapa anterior.');
+
+            return;
+        }
+
         $task->update(['status' => $status]);
     }
 
@@ -50,7 +57,15 @@ class Show extends Component
     {
         $this->authorizeKanban('task.delete');
 
-        $this->deliverable->tasks()->where('project_id', $this->projectId)->findOrFail($taskId)->delete();
+        $task = $this->deliverable->tasks()->where('project_id', $this->projectId)->findOrFail($taskId);
+
+        if ($task->invoice_id) {
+            session()->flash('message', 'Uma tarefa vinculada a uma fatura não pode ser removida.');
+
+            return;
+        }
+
+        $task->delete();
         session()->flash('message', 'Tarefa removida.');
     }
 

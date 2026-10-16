@@ -53,4 +53,18 @@ class Deliverable extends Model
     {
         return $this->tasks()->where('status', 'concluido')->orderBy('order');
     }
+
+    public function getEstimatedCostAttribute(): float
+    {
+        $tasks = $this->relationLoaded('tasks') ? $this->tasks : $this->tasks()->get();
+
+        return (float) $tasks->sum(fn (DeliverableTask $task) => $task->cost_estimated ?? 0);
+    }
+
+    public function getActualCostAttribute(): float
+    {
+        $tasks = $this->relationLoaded('tasks') ? $this->tasks : $this->tasks()->get();
+
+        return (float) $tasks->sum(fn (DeliverableTask $task) => $task->cost_actual ?? 0);
+    }
 }

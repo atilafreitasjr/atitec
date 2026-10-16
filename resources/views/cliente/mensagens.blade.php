@@ -1,89 +1,102 @@
-<x-app-layout>
-    <x-slot name="header"><h2 class="font-semibold text-xl text-gray-800 leading-tight">Mensagens</h2></x-slot>
-    <div class="py-8"><div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-4">
-        @if(session('success'))<div class="bg-green-100 border border-green-400 text-green-800 px-4 py-3 rounded">{{ session('success') }}</div>@endif
-        @if($errors->any())<div class="bg-red-100 border border-red-400 text-red-800 px-4 py-3 rounded">{{ $errors->first() }}</div>@endif
+@extends('adminlte::page')
 
-        @if($broadcasts->count())
-        <div class="bg-blue-50 border border-blue-200 p-5 rounded-xl">
-            <h3 class="font-bold mb-2">Comunicados gerais da ATITEC</h3>
+@section('title', 'Mensagens')
+
+@section('content_header')
+    <div><p class="text-uppercase small text-warning fw-bold mb-1" style="letter-spacing:.16em">Workspace ATITEC</p><h1 class="mb-0">Mensagens</h1></div>
+@stop
+
+@section('content')
+    @if(session('success'))<x-adminlte-alert theme="success" title="OK">{{ session('success') }}</x-adminlte-alert>@endif
+    @if($errors->any())<x-adminlte-alert theme="danger" title="Atenção">{{ $errors->first() }}</x-adminlte-alert>@endif
+
+    @if($broadcasts->count())
+        <x-adminlte-card title="Comunicados gerais da ATITEC" theme="info" icon="bi bi-megaphone">
             @foreach($broadcasts as $b)
                 @foreach($b->messages as $m)
-                    <p class="text-sm py-1"><strong>{{ $b->subject }}:</strong> {{ $m->body }}</p>
+                    <p class="mb-1"><strong>{{ $b->subject }}:</strong> {{ $m->body }}</p>
                 @endforeach
             @endforeach
-        </div>
-        @endif
+        </x-adminlte-card>
+    @endif
 
-        <div class="grid md:grid-cols-3 gap-4">
-            {{-- Lista de conversas --}}
-            <div class="bg-white p-5 rounded-xl shadow">
-                <h3 class="font-bold mb-3">Minhas conversas</h3>
-                <div class="space-y-2">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <x-adminlte-card title="Minhas conversas" icon="bi bi-chat-dots">
+                <div class="list-group list-group-flush">
                     @forelse($conversations as $c)
                         @php
                             $naoLidas = $c->messages->whereNull('read_at')->where('user_id', '!=', auth()->id())->count();
                             $ativa = $selected && $selected->id === $c->id;
                         @endphp
                         <a href="{{ route('cliente.mensagens', ['conversation' => $c->id]) }}"
-                           class="block border rounded-lg p-3 {{ $ativa ? 'border-indigo-500 bg-indigo-50' : 'hover:border-indigo-300' }}">
-                            <span class="flex justify-between items-center gap-2">
-                                <span class="text-sm font-medium">{{ $c->subject }}</span>
-                                @if($naoLidas > 0)<span class="text-xs bg-red-500 text-white rounded-full px-2 py-0.5">{{ $naoLidas }}</span>@endif
-                            </span>
-                            <span class="block text-xs text-gray-500 mt-1">
+                           class="list-group-item list-group-item-action px-2 {{ $ativa ? 'active' : '' }}">
+                            <div class="d-flex justify-content-between align-items-center gap-2">
+                                <span class="fw-semibold">{{ $c->subject }}</span>
+                                @if($naoLidas > 0)<span class="badge text-bg-danger">{{ $naoLidas }}</span>@endif
+                            </div>
+                            <small class="{{ $ativa ? '' : 'text-muted' }}">
                                 {{ $c->messages->last()?->created_at?->format('d/m/Y H:i') ?? $c->created_at->format('d/m/Y') }}
                                 @if($c->closed_at) · encerrada @endif
-                            </span>
+                            </small>
                         </a>
                     @empty
-                        <p class="text-sm text-gray-500">Nenhuma conversa ainda.</p>
+                        <p class="text-muted mb-0">Nenhuma conversa ainda.</p>
                     @endforelse
                 </div>
 
-                <hr class="my-4">
-                <h3 class="font-bold mb-2">Nova conversa</h3>
-                <form method="POST" action="{{ route('cliente.mensagens.store') }}" class="space-y-2">
+                <hr>
+                <h5>Nova conversa</h5>
+                <form method="POST" action="{{ route('cliente.mensagens.store') }}">
                     @csrf
-                    <input name="subject" placeholder="Assunto" class="w-full border rounded px-3 py-2 text-sm" required>
-                    <textarea name="body" rows="3" placeholder="Escreva sua mensagem..." class="w-full border rounded px-3 py-2 text-sm" required></textarea>
-                    <button class="bg-indigo-600 text-white px-4 py-2 rounded text-sm w-full">Iniciar conversa</button>
+                    <div class="mb-2"><input name="subject" placeholder="Assunto" class="form-control form-control-sm" required></div>
+                    <div class="mb-2"><textarea name="body" rows="3" placeholder="Escreva sua mensagem..." class="form-control form-control-sm" required></textarea></div>
+                    <button class="btn btn-primary btn-sm w-100">Iniciar conversa</button>
                 </form>
-            </div>
+            </x-adminlte-card>
+        </div>
 
-            {{-- Conversa selecionada --}}
-            <div class="md:col-span-2 bg-white p-5 rounded-xl shadow flex flex-col">
+        <div class="col-md-8">
+            <x-adminlte-card>
                 @if($selected)
-                    <div class="flex justify-between items-center mb-3">
-                        <h3 class="font-bold">{{ $selected->subject }}</h3>
-                        @if($selected->closed_at)<span class="text-xs bg-gray-200 text-gray-700 rounded-full px-2 py-0.5">encerrada</span>@endif
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="mb-0">{{ $selected->subject }}</h4>
+                        @if($selected->closed_at)<span class="badge text-bg-secondary">encerrada</span>@endif
                     </div>
-                    <div class="space-y-3 flex-1 overflow-y-auto mb-4" style="max-height:45vh">
+                    <div class="overflow-auto mb-3 pe-1" style="max-height:45vh">
                         @foreach($selected->messages as $m)
                             @php $mine = $m->user_id === auth()->id(); @endphp
-                            <div class="flex {{ $mine ? 'justify-end' : 'justify-start' }}">
-                                <div class="p-3 rounded-2xl text-sm {{ $mine ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-800' }}" style="max-width:80%">
-                                    <p class="text-xs opacity-75 mb-1">{{ $mine ? 'Você' : 'ATITEC' }} · {{ $m->created_at->format('d/m/Y H:i') }}</p>
-                                    <p style="white-space:pre-wrap">{{ $m->body }}</p>
+                            <div class="d-flex {{ $mine ? 'justify-content-end' : 'justify-content-start' }} mb-2">
+                                <div class="chat-bubble {{ $mine ? 'chat-bubble-own' : 'chat-bubble-other' }} rounded p-2 px-3">
+                                    <small class="d-block text-muted">{{ $mine ? 'Você' : 'ATITEC' }} · {{ $m->created_at->format('d/m/Y H:i') }}</small>
+                                    <span style="white-space:pre-wrap">{{ $m->body }}</span>
                                 </div>
                             </div>
                         @endforeach
                     </div>
 
                     @if($selected->closed_at)
-                        <p class="text-sm text-gray-500">Esta conversa foi encerrada pela ATITEC. Inicie uma nova conversa se precisar.</p>
+                        <p class="text-muted mb-0">Esta conversa foi encerrada pela ATITEC. Inicie uma nova conversa se precisar.</p>
                     @else
-                        <form method="POST" action="{{ route('cliente.mensagens.store') }}" class="flex gap-2">
+                        <form method="POST" action="{{ route('cliente.mensagens.store') }}" class="d-flex gap-2">
                             @csrf
                             <input type="hidden" name="conversation_id" value="{{ $selected->id }}">
-                            <textarea name="body" rows="2" placeholder="Responder..." class="flex-1 border rounded px-3 py-2 text-sm" required></textarea>
-                            <button class="bg-indigo-600 text-white px-4 py-2 rounded text-sm self-end">Enviar</button>
+                            <textarea name="body" rows="2" placeholder="Responder..." class="form-control" required></textarea>
+                            <button class="btn btn-primary align-self-end">Enviar</button>
                         </form>
                     @endif
                 @else
-                    <p class="text-sm text-gray-500">Selecione uma conversa ou inicie uma nova.</p>
+                    <p class="text-muted mb-0">Selecione uma conversa ou inicie uma nova.</p>
                 @endif
-            </div>
+            </x-adminlte-card>
         </div>
-    </div></div>
-</x-app-layout>
+    </div>
+@stop
+
+@push('css')
+    <style>
+        .chat-bubble { max-width: 80%; border: 1px solid #303136; }
+        .chat-bubble-own { background: rgba(255, 255, 93, .12); border-color: rgba(255, 255, 93, .35); }
+        .chat-bubble-other { background: #1c1d20; }
+    </style>
+@endpush

@@ -27,6 +27,7 @@
                     <a href="{{ route('dashboard') }}" class="hover:text-[#FFFF5D]">Minha área</a>
                 @else
                     <a href="{{ route('login') }}" class="hover:text-[#FFFF5D]">Entrar</a>
+                    <a href="{{ route('register') }}" class="hover:text-[#FFFF5D]">Criar conta</a>
                 @endauth
                 <a href="{{ route('site.orcamento') }}" class="bg-[#FFFF5D] text-black font-semibold px-4 py-2 rounded-lg hover:bg-[#FFD400]">Solicitar orçamento</a>
             </nav>
@@ -51,6 +52,7 @@
                     <a href="{{ route('dashboard') }}" class="py-3 border-b border-white/5 font-medium hover:text-[#FFFF5D]" @click="open = false">Minha área</a>
                 @else
                     <a href="{{ route('login') }}" class="py-3 border-b border-white/5 font-medium hover:text-[#FFFF5D]" @click="open = false">Entrar</a>
+                    <a href="{{ route('register') }}" class="py-3 border-b border-white/5 font-medium hover:text-[#FFFF5D]" @click="open = false">Criar conta</a>
                 @endauth
                 <a href="{{ route('site.orcamento') }}" class="mt-3 mb-2 bg-[#FFFF5D] text-black text-center font-semibold px-4 py-3 rounded-lg" @click="open = false">Solicitar orçamento</a>
             </nav>

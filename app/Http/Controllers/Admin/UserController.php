@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
 
@@ -32,10 +33,12 @@ class UserController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
+        $client = $request->filled('client_id') ? Client::find($request->integer('client_id')) : null;
+
         return view('admin.users.form', [
-            'user' => new User(['role' => 'cliente', 'active' => true]),
+            'user' => new User(['role' => 'cliente', 'active' => true, 'client_id' => $client?->id]),
             'roles' => Role::orderBy('name')->pluck('name'),
             'clients' => Client::orderBy('name')->get(),
         ]);
@@ -45,15 +48,21 @@ class UserController extends Controller
     {
         $data = $this->validated($request);
 
+        $clientId = $data['role'] === 'cliente' ? ($data['client_id'] ?? null) : null;
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => $data['password'],
             'role' => $data['role'],
-            'client_id' => $data['client_id'] ?? null,
+            'client_id' => $clientId,
             'active' => $request->boolean('active'),
             'email_verified_at' => now(),
         ]);
+
+        $this->syncClientLink($user, null, $clientId);
+        if ($clientId) {
+            Client::whereKey($clientId)->update(['name' => $user->name, 'email' => $user->email]);
+        }
 
         return redirect()->route('admin.users.index')->with('success', "Usuário {$user->name} criado.");
     }
@@ -78,13 +87,21 @@ class UserController extends Controller
             ]);
         }
 
+        $oldClientId = $user->client_id;
+        $clientId = $data['role'] === 'cliente' ? ($data['client_id'] ?? null) : null;
+
         $user->update([
             'name' => $data['name'],
             'email' => $data['email'],
             'role' => $data['role'],
-            'client_id' => $data['client_id'] ?? null,
+            'client_id' => $clientId,
             'active' => $request->boolean('active'),
         ]);
+
+        $this->syncClientLink($user, $oldClientId, $clientId);
+        if ($clientId) {
+            Client::whereKey($clientId)->update(['name' => $user->name, 'email' => $user->email]);
+        }
 
         if (! empty($data['password'])) {
             $user->update(['password' => $data['password']]);
@@ -111,10 +128,15 @@ class UserController extends Controller
 
     private function validated(Request $request, ?User $user = null): array
     {
+        $emailRules = ['required', 'email', 'max:160', Rule::unique('users', 'email')->ignore($user?->id)];
+        if ($request->filled('client_id') && $request->input('role') === 'cliente') {
+            $emailRules[] = Rule::unique('clients', 'email')->ignore($request->integer('client_id'));
+        }
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:160'],
-            'email' => ['required', 'email', 'max:160', Rule::unique('users', 'email')->ignore($user?->id)],
-            'password' => [$user ? 'nullable' : 'required', 'string', 'min:8', 'confirmed'],
+            'email' => $emailRules,
+            'password' => [$user ? 'nullable' : 'required', 'string', 'confirmed', Password::defaults()],
             'role' => ['required', 'string', Rule::exists('roles', 'name')],
             'client_id' => ['nullable', 'exists:clients,id'],
             'active' => ['nullable', 'boolean'],
@@ -135,5 +157,19 @@ class UserController extends Controller
         }
 
         return User::where('role', 'admin')->where('active', true)->whereKeyNot($user->getKey())->count() === 0;
+    }
+
+    private function syncClientLink(User $user, ?int $previousClientId, ?int $clientId): void
+    {
+        if ($previousClientId && $previousClientId !== $clientId) {
+            Client::whereKey($previousClientId)->where('user_id', $user->id)->update(['user_id' => null]);
+        }
+
+        if (! $clientId) {
+            return;
+        }
+
+        Client::where('user_id', $user->id)->whereKeyNot($clientId)->update(['user_id' => null]);
+        Client::whereKey($clientId)->update(['user_id' => $user->id]);
     }
 }

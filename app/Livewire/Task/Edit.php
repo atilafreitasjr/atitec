@@ -6,6 +6,7 @@ use App\Livewire\Concerns\ScopedToProject;
 use App\Models\Deliverable;
 use App\Models\DeliverableTask;
 use App\Models\User;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 class Edit extends Component
@@ -73,7 +74,7 @@ class Edit extends Component
             'status' => 'required|in:pendente,andamento,concluido',
             'priority' => 'required|in:baixa,media,alta',
             'due_date' => 'nullable|date',
-            'phase' => 'nullable|in:1,2,3,4',
+            'phase' => ['nullable', Rule::in(array_keys(DeliverableTask::PHASES))],
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'hours_estimated' => 'nullable|numeric|min:0',
@@ -89,6 +90,25 @@ class Edit extends Component
 
         // A entrega de destino precisa pertencer a este projeto (isolamento).
         $deliverable = Deliverable::where('project_id', $this->projectId)->findOrFail($this->deliverable_id);
+
+        if ($this->task->invoice_id) {
+            $hoursChanged = (float) ($this->hours_actual ?: 0) !== (float) ($this->task->hours_actual ?: 0);
+            $rateChanged = (float) ($this->hourly_rate ?: 0) !== (float) ($this->task->hourly_rate ?: 0);
+            $titleChanged = $this->title !== $this->task->title;
+            $deliverableChanged = (int) $this->deliverable_id !== (int) $this->task->deliverable_id;
+
+            if ($hoursChanged || $rateChanged || $titleChanged || $deliverableChanged) {
+                $this->addError('financial', 'Título, entrega, horas realizadas e valor/hora ficam protegidos após a tarefa entrar em uma fatura.');
+
+                return;
+            }
+
+            if ($this->status !== 'concluido') {
+                $this->addError('status', 'A situação de uma tarefa faturada não pode voltar para uma etapa anterior.');
+
+                return;
+            }
+        }
 
         $this->task->update([
             'project_id' => $this->projectId,

@@ -8,6 +8,51 @@
 // Bootstrap (provides dropdowns, modals, tooltips, offcanvas, etc.)
 import 'bootstrap'
 
+// Busca de endereço por CEP (ViaCEP) — compartilhado com o site/portal
+import './cep'
+
+// Máscaras (CPF, CNPJ, CEP, telefone, moeda) — compartilhado com o site/portal
+import './masks'
+
+// Mostrar/ocultar senha + checklist de regras (compartilhado com o site/portal)
+import './password'
+
+// Ao escolher um projeto na fatura, reaproveita o cliente já vinculado a ele.
+document.addEventListener('change', (event) => {
+  const project = event.target.closest('[data-sync-project-client]')
+
+  if (project) {
+    const clientId = project.selectedOptions[0]?.dataset.clientId
+    const client = project.form?.querySelector('[name="client_id"]')
+
+    if (clientId && client) {
+      client.value = clientId
+      client.dispatchEvent(new Event('change', { bubbles: true }))
+    }
+
+    return
+  }
+
+  const userSelect = event.target.closest('[data-prefill-client-from-user]')
+  const selectedUser = userSelect?.selectedOptions[0]
+  const form = userSelect?.form
+
+  if (!selectedUser?.value || !form) return
+
+  const name = form.querySelector('[name="name"]')
+  const email = form.querySelector('[name="email"]')
+
+  if (name && selectedUser.dataset.userName) {
+    name.value = selectedUser.dataset.userName
+    name.dispatchEvent(new Event('input', { bubbles: true }))
+  }
+
+  if (email && selectedUser.dataset.userEmail) {
+    email.value = selectedUser.dataset.userEmail
+    email.dispatchEvent(new Event('input', { bubbles: true }))
+  }
+})
+
 // OverlayScrollbars — AdminLTE uses it for the sidebar scroller (optional)
 import { OverlayScrollbars } from 'overlayscrollbars'
 

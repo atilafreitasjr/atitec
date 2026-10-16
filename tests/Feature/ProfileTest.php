@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Client;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -41,6 +42,21 @@ class ProfileTest extends TestCase
         $this->assertSame('Test User', $user->name);
         $this->assertSame('test@example.com', $user->email);
         $this->assertNull($user->email_verified_at);
+    }
+
+    public function test_client_profile_contact_is_kept_in_sync_with_workspace(): void
+    {
+        $client = Client::create(['name' => 'Nome antigo', 'email' => 'antigo@example.com']);
+        $user = User::factory()->create(['name' => 'Nome antigo', 'email' => 'antigo@example.com', 'client_id' => $client->id]);
+        $client->update(['user_id' => $user->id]);
+
+        $this->actingAs($user)->patch('/profile', [
+            'name' => 'Nome atualizado',
+            'email' => 'atualizado@example.com',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame('Nome atualizado', $client->fresh()->name);
+        $this->assertSame('atualizado@example.com', $client->fresh()->email);
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void

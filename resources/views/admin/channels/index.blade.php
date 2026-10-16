@@ -13,7 +13,7 @@
                 @csrf @method('PUT')
                 <div class="row g-2">
                     <div class="col-md-3"><input name="label" value="{{ $c->label }}" class="form-control" required></div>
-                    <div class="col-md-3"><input name="value" value="{{ $c->value }}" class="form-control" required></div>
+                    <div class="col-md-3"><input name="value" value="{{ $c->value }}" class="form-control" required data-mask="phone" data-mask-when="[name='type']|whatsapp|phone"></div>
                     <div class="col-md-4"><input name="url" value="{{ $c->url }}" class="form-control" placeholder="URL"></div>
                     <div class="col-md-2 d-flex gap-1">
                         <input type="hidden" name="type" value="{{ $c->type }}">
@@ -29,7 +29,7 @@
                 @csrf
                 <x-adminlte-input name="type" label="Tipo (ex: linkedin)" required/>
                 <x-adminlte-input name="label" label="Rótulo" required/>
-                <x-adminlte-input name="value" label="Valor" required/>
+                <x-adminlte-input name="value" label="Valor" required data-mask="phone" data-mask-when="[name='type']|whatsapp|phone"/>
                 <x-adminlte-input name="url" label="URL"/>
                 <x-adminlte-input name="sort_order" type="number" label="Ordem" value="10" required/>
                 <x-adminlte-button label="Adicionar" theme="success" type="submit"/>

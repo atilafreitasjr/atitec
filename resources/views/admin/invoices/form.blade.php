@@ -6,15 +6,15 @@
 
 @section('content')
     <x-adminlte-card>
-        <form method="POST" action="{{ $invoice->exists ? route('admin.invoices.update', $invoice) : route('admin.invoices.store') }}">
+        <form method="POST" enctype="multipart/form-data" action="{{ $invoice->exists ? route('admin.invoices.update', $invoice) : route('admin.invoices.store') }}">
             @csrf @if($invoice->exists)@method('PUT')@endif
             <div class="row">
-                <div class="col-md-6"><x-adminlte-select name="client_id" label="Cliente">
+                <div class="col-md-6"><x-adminlte-select name="client_id" id="client_id" label="Cliente">
                     @foreach($clients as $c)<option value="{{ $c->id }}" @selected(old('client_id', $invoice->client_id) == $c->id)>{{ $c->name }}</option>@endforeach
                 </x-adminlte-select></div>
-                <div class="col-md-6"><x-adminlte-select name="project_id" label="Projeto (opcional)">
+                <div class="col-md-6"><x-adminlte-select name="project_id" label="Projeto (opcional)" data-sync-project-client>
                     <option value="">—</option>
-                    @foreach($projects as $p)<option value="{{ $p->id }}" @selected(old('project_id', $invoice->project_id) == $p->id)>{{ $p->title }}</option>@endforeach
+                    @foreach($projects as $p)<option value="{{ $p->id }}" data-client-id="{{ $p->client_id }}" @selected(old('project_id', $invoice->project_id) == $p->id)>{{ $p->title }}</option>@endforeach
                 </x-adminlte-select></div>
             </div>
             <div class="row">
@@ -25,7 +25,16 @@
             </div>
             <x-adminlte-textarea name="description" label="Descrição" rows="2">{{ old('description', $invoice->description) }}</x-adminlte-textarea>
             <div class="row">
-                <div class="col-md-3"><x-adminlte-input name="amount" type="number" step="0.01" label="Valor (R$)" :value="old('amount', $invoice->amount)" required/></div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="amount_display" class="form-label">Valor (R$)</label>
+                        <input type="text" id="amount_display" inputmode="numeric" autocomplete="off" placeholder="0,00"
+                               data-mask="money" data-mask-raw="amount"
+                               class="form-control @error('amount') is-invalid @enderror">
+                        <input type="hidden" name="amount" value="{{ old('amount', $invoice->amount) }}">
+                        @error('amount')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                    </div>
+                </div>
                 <div class="col-md-3"><x-adminlte-input name="due_date" type="date" label="Vencimento" :value="old('due_date', optional($invoice->due_date)->format('Y-m-d'))" required/></div>
                 <div class="col-md-3"><x-adminlte-input name="paid_at" type="date" label="Pago em" :value="old('paid_at', optional($invoice->paid_at)->format('Y-m-d'))"/></div>
                 <div class="col-md-3"><x-adminlte-select name="status" label="Status">
@@ -35,6 +44,14 @@
             <div class="row">
                 <div class="col-md-6"><x-adminlte-input name="gateway" label="Gateway (Asaas/MP/Stripe)" :value="old('gateway', $invoice->gateway)"/></div>
                 <div class="col-md-6"><x-adminlte-input name="external_id" label="ID externo" :value="old('external_id', $invoice->external_id)"/></div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <x-adminlte-input name="pdf" type="file" label="Boleto ou documento de cobrança (PDF)" accept="application/pdf"/>
+                    @if($invoice->pdf_path)
+                        <a class="small" href="{{ route('invoices.pdf', $invoice) }}" target="_blank" rel="noopener">Ver PDF atual</a>
+                    @endif
+                </div>
             </div>
             <x-adminlte-textarea name="notes" label="Observações" rows="2">{{ old('notes', $invoice->notes) }}</x-adminlte-textarea>
             <x-adminlte-button label="Salvar" theme="primary" type="submit"/>

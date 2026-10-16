@@ -36,7 +36,16 @@
                 </x-adminlte-select></div>
                 <div class="col-md-3"><x-adminlte-input name="progress" type="number" min="0" max="100" label="Progresso %" :value="old('progress', $project->progress ?? 0)" required/></div>
                 <div class="col-md-3"><x-adminlte-input name="deadline" type="date" label="Prazo" :value="old('deadline', optional($project->deadline)->format('Y-m-d'))"/></div>
-                <div class="col-md-3"><x-adminlte-input name="budget" type="number" step="0.01" label="Orçamento (R$)" :value="old('budget', $project->budget)"/></div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="budget_display" class="form-label">Orçamento (R$)</label>
+                        <input type="text" id="budget_display" inputmode="numeric" autocomplete="off" placeholder="0,00"
+                               data-mask="money" data-mask-raw="budget"
+                               class="form-control @error('budget') is-invalid @enderror">
+                        <input type="hidden" name="budget" value="{{ old('budget', $project->budget) }}">
+                        @error('budget')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                    </div>
+                </div>
             </div>
             <div class="row">
                 <div class="col-md-4"><x-adminlte-input name="image" label="Imagem (path)" :value="old('image', $project->image)"/></div>

@@ -140,7 +140,8 @@ class ConversationModuleTest extends TestCase
         $this->get(route('cliente.mensagens'))
             ->assertOk()
             ->assertSee('Bem-vindo')
-            ->assertSee('Bem-vindo ao portal!');
+            ->assertSee('Bem-vindo ao portal!')
+            ->assertSee('chat-bubble-other', false);
 
         // Abrir marca a mensagem da ATITEC como lida.
         $this->assertNotNull($staffMessage->fresh()->read_at);
@@ -151,6 +152,9 @@ class ConversationModuleTest extends TestCase
         ])->assertRedirect(route('cliente.mensagens'));
 
         $this->assertEquals(2, $conversation->messages()->count());
+
+        $this->get(route('cliente.mensagens', ['conversation' => $conversation->id]))
+            ->assertSee('chat-bubble-own', false);
     }
 
     public function test_navbar_mostra_mensagens_nao_lidas_do_cliente(): void

@@ -30,6 +30,7 @@ class Project extends Model
         'homologacao' => 'Homologação',
         'entregue' => 'Entregue',
         'suporte' => 'Suporte',
+        'arquivado' => 'Arquivado',
     ];
 
     public function client(): BelongsTo
@@ -55,5 +56,33 @@ class Project extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(ProjectDocument::class)->latest();
+    }
+
+    public function getEstimatedCostAttribute(): float
+    {
+        return (float) $this->deliverableTasks()
+            ->selectRaw('COALESCE(SUM(COALESCE(hours_estimated, 0) * COALESCE(hourly_rate, 0)), 0) as aggregate')
+            ->value('aggregate');
+    }
+
+    public function getActualCostAttribute(): float
+    {
+        return (float) $this->deliverableTasks()
+            ->selectRaw('COALESCE(SUM(COALESCE(hours_actual, 0) * COALESCE(hourly_rate, 0)), 0) as aggregate')
+            ->value('aggregate');
+    }
+
+    public function getUnbilledActualCostAttribute(): float
+    {
+        return (float) $this->deliverableTasks()
+            ->where('status', 'concluido')
+            ->whereNull('invoice_id')
+            ->selectRaw('COALESCE(SUM(COALESCE(hours_actual, 0) * COALESCE(hourly_rate, 0)), 0) as aggregate')
+            ->value('aggregate');
     }
 }

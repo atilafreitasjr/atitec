@@ -13,7 +13,7 @@ use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password', 'role', 'client_id', 'active'])]
+#[Fillable(['name', 'email', 'email_verified_at', 'password', 'role', 'client_id', 'active', 'google_id', 'avatar'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -25,6 +25,11 @@ class User extends Authenticatable
 
     protected static function booted(): void
     {
+        // Todo usuário nasce como cliente; o papel pode ser alterado no admin depois.
+        static::creating(function (User $user) {
+            $user->role ??= 'cliente';
+        });
+
         // Mantém o papel Spatie sincronizado com a coluna role (Kanban/permissões).
         static::saved(function (User $user) {
             if ($user->role && Role::where('name', $user->role)->exists()) {
@@ -50,7 +55,7 @@ class User extends Authenticatable
     /** Avatar exibido no topo do AdminLTE (evita as fotos de demonstração do pacote). */
     public function getProfilePhotoUrlAttribute(): string
     {
-        return asset('images/atitec_logo.png');
+        return $this->avatar ?: asset('images/atitec_logo.png');
     }
 
     public function isAdmin(): bool

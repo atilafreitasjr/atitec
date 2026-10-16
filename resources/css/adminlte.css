@@ -10,6 +10,315 @@
 @import 'overlayscrollbars/overlayscrollbars.css';
 @import 'admin-lte/dist/css/adminlte.css';
 
+:root {
+    --atitec-black: #08090a;
+    --atitec-coal: #0e0f11;
+    --atitec-panel: #151619;
+    --atitec-panel-raised: #1c1d20;
+    --atitec-border: #303136;
+    --atitec-text: #f3ffdc;
+    --atitec-muted: #aeb2a4;
+    --atitec-yellow: #ffff5d;
+    --atitec-yellow-dark: #e4e400;
+    --bs-primary: var(--atitec-yellow);
+    --bs-primary-rgb: 255, 255, 93;
+    --bs-warning: var(--atitec-yellow);
+    --bs-warning-rgb: 255, 255, 93;
+    --bs-body-bg: var(--atitec-black);
+    --bs-body-color: var(--atitec-text);
+    --bs-border-color: var(--atitec-border);
+    --bs-link-color: var(--atitec-yellow);
+    --bs-link-hover-color: #fffda3;
+}
+
+body,
+.app-wrapper,
+.app-main,
+.app-content-wrapper,
+.app-content {
+    background: var(--atitec-black) !important;
+    color: var(--atitec-text);
+}
+
+.app-header,
+.app-footer {
+    background: var(--atitec-coal) !important;
+    color: var(--atitec-text) !important;
+    border-color: var(--atitec-border) !important;
+}
+
+.app-header .nav-link,
+.app-header .navbar-nav .nav-link,
+.app-header .navbar-brand,
+.app-header .navbar-text,
+.app-header .btn-link {
+    color: var(--atitec-text) !important;
+}
+
+.app-header .nav-link:hover,
+.app-header .navbar-nav .nav-link:hover,
+.app-header .btn-link:hover {
+    color: var(--atitec-yellow) !important;
+}
+
+.app-header .form-control,
+.app-header .input-group-text {
+    color: var(--atitec-text) !important;
+    background: #151619 !important;
+    border-color: var(--atitec-border) !important;
+}
+
+.app-header .dropdown-menu .dropdown-item {
+    color: var(--atitec-text) !important;
+}
+
+.app-header .dropdown-menu .dropdown-item:hover,
+.app-header .dropdown-menu .dropdown-item:focus {
+    color: var(--atitec-yellow) !important;
+    background: var(--atitec-panel-raised) !important;
+}
+
+.app-header,
+.app-footer,
+.app-sidebar,
+.content-wrapper {
+    box-shadow: none !important;
+}
+
+.app-sidebar,
+.sidebar-wrapper,
+.brand-container {
+    background: var(--atitec-coal) !important;
+    border-color: var(--atitec-border) !important;
+}
+
+.brand-link,
+.brand-container .brand-link {
+    color: var(--atitec-text) !important;
+    border-color: var(--atitec-border) !important;
+}
+
+.sidebar-wrapper .nav-header,
+.sidebar-menu .nav-header {
+    color: var(--atitec-yellow) !important;
+    font-size: .68rem;
+    font-weight: 800;
+    letter-spacing: .13em;
+}
+
+.sidebar-menu .nav-link {
+    color: #d8dacd !important;
+    border-radius: .65rem;
+    margin: .12rem .65rem;
+}
+
+.sidebar-menu .nav-link:hover,
+.sidebar-menu .nav-link.active {
+    color: #08090a !important;
+    background: var(--atitec-yellow) !important;
+}
+
+.sidebar-menu .nav-link .nav-icon,
+.sidebar-menu .nav-link:hover .nav-icon,
+.sidebar-menu .nav-link.active .nav-icon {
+    color: inherit !important;
+}
+
+.content-header h1,
+.content-header h2,
+.page-title {
+    color: var(--atitec-text) !important;
+    font-weight: 750;
+    letter-spacing: -.025em;
+}
+
+.card,
+.info-box,
+.small-box,
+.list-group-item,
+.dropdown-menu,
+.modal-content,
+.toast,
+.accordion-item {
+    background: var(--atitec-panel) !important;
+    color: var(--atitec-text) !important;
+    border-color: var(--atitec-border) !important;
+}
+
+.card,
+.info-box,
+.small-box {
+    border-radius: .9rem !important;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, .22) !important;
+}
+
+.card-header,
+.card-footer,
+.modal-header,
+.modal-footer,
+.dropdown-header {
+    background: var(--atitec-panel-raised) !important;
+    color: var(--atitec-text) !important;
+    border-color: var(--atitec-border) !important;
+}
+
+.table {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--atitec-text);
+    --bs-table-border-color: var(--atitec-border);
+    --bs-table-hover-color: #fff;
+    --bs-table-hover-bg: rgba(255, 255, 93, .07);
+    color: var(--atitec-text) !important;
+}
+
+.table thead th {
+    color: var(--atitec-muted);
+    border-bottom-color: var(--atitec-border);
+    font-size: .72rem;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+}
+
+.form-control,
+.form-select,
+.input-group-text,
+.form-control:disabled,
+.form-select:disabled {
+    color: var(--atitec-text) !important;
+    background-color: #101114 !important;
+    border-color: #3b3c41 !important;
+}
+
+.form-control::placeholder {
+    color: #83867d !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--atitec-yellow) !important;
+    box-shadow: 0 0 0 .2rem rgba(255, 255, 93, .18) !important;
+}
+
+.form-check-input {
+    background-color: #101114;
+    border-color: #74776c;
+}
+
+.form-check-input:checked {
+    background-color: var(--atitec-yellow);
+    border-color: var(--atitec-yellow-dark);
+}
+
+.btn-primary,
+.text-bg-primary,
+.bg-primary {
+    --bs-btn-color: #090a0b;
+    --bs-btn-bg: var(--atitec-yellow);
+    --bs-btn-border-color: var(--atitec-yellow);
+    --bs-btn-hover-color: #090a0b;
+    --bs-btn-hover-bg: #e7e700;
+    --bs-btn-hover-border-color: #e7e700;
+    --bs-btn-active-color: #090a0b;
+    --bs-btn-active-bg: #d4d400;
+    --bs-btn-active-border-color: #d4d400;
+    color: #090a0b !important;
+    background-color: var(--atitec-yellow) !important;
+    border-color: var(--atitec-yellow) !important;
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--atitec-yellow);
+    --bs-btn-border-color: var(--atitec-yellow);
+    --bs-btn-hover-color: #090a0b;
+    --bs-btn-hover-bg: var(--atitec-yellow);
+    --bs-btn-hover-border-color: var(--atitec-yellow);
+}
+
+.btn-warning,
+.bg-warning,
+.text-warning {
+    --bs-btn-color: #090a0b;
+    --bs-btn-bg: var(--atitec-yellow);
+    --bs-btn-border-color: var(--atitec-yellow);
+    --bs-btn-hover-color: #090a0b;
+    --bs-btn-hover-bg: #e7e700;
+    --bs-btn-hover-border-color: #e7e700;
+    color: var(--atitec-yellow) !important;
+}
+
+.btn-warning,
+.bg-warning {
+    color: #090a0b !important;
+    background-color: var(--atitec-yellow) !important;
+    border-color: var(--atitec-yellow) !important;
+}
+
+.btn-link,
+.text-primary,
+a:not(.btn):not(.nav-link):not(.dropdown-item) {
+    color: var(--atitec-yellow) !important;
+}
+
+.btn-link:hover,
+a:not(.btn):not(.nav-link):not(.dropdown-item):hover {
+    color: #fffda3 !important;
+}
+
+.bg-body-secondary,
+.text-bg-light,
+.bg-light,
+.list-group-item-action:hover {
+    background-color: var(--atitec-panel-raised) !important;
+    color: var(--atitec-text) !important;
+}
+
+.text-muted,
+.form-text,
+.breadcrumb-item,
+.breadcrumb-item a {
+    color: var(--atitec-muted) !important;
+}
+
+.progress {
+    background: #303136 !important;
+}
+
+.progress-bar {
+    background-color: var(--atitec-yellow) !important;
+    color: #090a0b !important;
+}
+
+.page-link {
+    color: var(--atitec-text) !important;
+    background: var(--atitec-panel) !important;
+    border-color: var(--atitec-border) !important;
+}
+
+.page-item.active .page-link {
+    color: #090a0b !important;
+    background: var(--atitec-yellow) !important;
+    border-color: var(--atitec-yellow) !important;
+}
+
+.alert,
+.badge {
+    border-radius: .6rem;
+}
+
+.app-content-header {
+    padding-bottom: .5rem;
+}
+
+@media (max-width: 767.98px) {
+    .app-content {
+        padding-inline: .75rem;
+    }
+
+    .content-header h1 {
+        font-size: 1.45rem;
+    }
+}
+
 /*
  * Option B: compile from source to customise SCSS variables. Comment out
  * the admin-lte CSS import above and use this instead (requires `sass`):

@@ -15,14 +15,15 @@
     <div class="card">
         <div class="table-responsive">
             <table class="table table-hover mb-0">
-                <thead><tr><th>Nome</th><th>Situação</th><th>HT</th><th>Valor</th><th>Término</th><th></th></tr></thead>
+                    <thead><tr><th>Nome</th><th>Situação</th><th>Horas previstas</th><th>Custo previsto</th><th>Custo realizado</th><th>Término</th><th></th></tr></thead>
                 <tbody>
                     @forelse($deliverables as $deliverable)
                         <tr>
                             <td><a href="{{ route('admin.projects.deliverables.show', [$projectId, $deliverable->id]) }}" wire:navigate>{{ $deliverable->name }}</a></td>
                             <td><span class="badge bg-secondary">{{ ucfirst($deliverable->status) }}</span></td>
-                            <td class="small text-muted">{{ $deliverable->hours_estimated ? number_format($deliverable->hours_estimated, 0, ',', '.').' HT' : '—' }}</td>
-                            <td class="small">{{ $deliverable->hours_estimated ? 'R$ '.number_format($deliverable->hours_estimated * 100, 2, ',', '.') : '—' }}</td>
+                            <td class="small text-muted">{{ $deliverable->hours_estimated !== null ? number_format((float) $deliverable->hours_estimated, 2, ',', '.').' h' : '—' }}</td>
+                            <td class="small">R$ {{ number_format($deliverable->estimated_cost, 2, ',', '.') }}</td>
+                            <td class="small">R$ {{ number_format($deliverable->actual_cost, 2, ',', '.') }}</td>
                             <td class="small text-muted">{{ $deliverable->end_date?->format('d/m/Y') ?? '—' }}</td>
                             <td class="text-end text-nowrap">
                                 <a href="{{ route('admin.projects.deliverables.show', [$projectId, $deliverable->id]) }}" class="btn btn-sm btn-outline-info" wire:navigate>Ver</a>
@@ -32,7 +33,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="text-center text-muted">Nenhuma entrega encontrada.</td></tr>
+                        <tr><td colspan="7" class="text-center text-muted">Nenhuma entrega encontrada.</td></tr>
                     @endforelse
                 </tbody>
             </table>

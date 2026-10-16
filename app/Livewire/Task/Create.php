@@ -6,6 +6,7 @@ use App\Livewire\Concerns\ScopedToProject;
 use App\Models\Deliverable;
 use App\Models\DeliverableTask;
 use App\Models\User;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 class Create extends Component
@@ -56,7 +57,7 @@ class Create extends Component
             'status' => 'required|in:pendente,andamento,concluido',
             'priority' => 'required|in:baixa,media,alta',
             'due_date' => 'nullable|date',
-            'phase' => 'nullable|in:1,2,3,4',
+            'phase' => ['nullable', Rule::in(array_keys(DeliverableTask::PHASES))],
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'hours_estimated' => 'nullable|numeric|min:0',

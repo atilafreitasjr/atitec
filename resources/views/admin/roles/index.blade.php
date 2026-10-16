@@ -1,4 +1,5 @@
 @extends('adminlte::page')
+@use('App\Support\PermissionLabels')
 
 @section('title', 'Papéis e permissões')
 
@@ -30,11 +31,11 @@
                             </thead>
                             <tbody>
                                 @foreach($catalog as $module => $actions)
-                                    <tr class="table-light"><td colspan="{{ $roles->count() + 1 }}" class="fw-bold text-uppercase small">{{ $module }}</td></tr>
+                                    <tr class="table-light"><td colspan="{{ $roles->count() + 1 }}" class="fw-bold text-uppercase small">{{ PermissionLabels::module($module) }}</td></tr>
                                     @foreach($actions as $action)
                                         @php $permission = "{$module}.{$action}"; @endphp
                                         <tr>
-                                            <td><code class="small">{{ $permission }}</code></td>
+                                            <td>{{ PermissionLabels::action($action) }} <code class="small text-muted ms-1">{{ $permission }}</code></td>
                                             @foreach($roles as $role)
                                                 @php $isAdminRole = $role->name === 'admin'; @endphp
                                                 <td class="text-center">

@@ -7,8 +7,9 @@
         <div class="card-body">
             <dl class="row mb-0">
                 <dt class="col-sm-3">Situação</dt><dd class="col-sm-3"><span class="badge bg-secondary">{{ ucfirst($deliverable->status) }}</span></dd>
-                <dt class="col-sm-3">Horas técnicas (HT)</dt><dd class="col-sm-3">{{ $deliverable->hours_estimated ? number_format($deliverable->hours_estimated, 0, ',', '.').' HT' : '—' }}</dd>
-                <dt class="col-sm-3">Valor</dt><dd class="col-sm-3">{{ $deliverable->hours_estimated ? 'R$ '.number_format($deliverable->hours_estimated * 100, 2, ',', '.') : '—' }}</dd>
+                <dt class="col-sm-3">Horas previstas</dt><dd class="col-sm-3">{{ $deliverable->hours_estimated !== null ? number_format((float) $deliverable->hours_estimated, 2, ',', '.').' h' : '—' }}</dd>
+                <dt class="col-sm-3">Custo previsto</dt><dd class="col-sm-3">R$ {{ number_format($deliverable->estimated_cost, 2, ',', '.') }}</dd>
+                <dt class="col-sm-3">Custo realizado</dt><dd class="col-sm-3">R$ {{ number_format($deliverable->actual_cost, 2, ',', '.') }}</dd>
                 <dt class="col-sm-3">Início</dt><dd class="col-sm-3">{{ $deliverable->start_date?->format('d/m/Y') ?? '—' }}</dd>
                 <dt class="col-sm-3">Término</dt><dd class="col-sm-3">{{ $deliverable->end_date?->format('d/m/Y') ?? '—' }}</dd>
                 <dt class="col-sm-3">Progresso</dt><dd class="col-sm-3">{{ $deliverable->tasks_count ? round(($deliverable->completed_tasks_count / max($deliverable->tasks_count, 1)) * 100) : 0 }}%</dd>

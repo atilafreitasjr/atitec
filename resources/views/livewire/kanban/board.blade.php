@@ -43,10 +43,9 @@
 
                 <select wire:model.live="selectedPhase" class="form-select form-select-sm" style="width:auto">
                     <option value="">Todas as fases</option>
-                    <option value="1">Fase 1 — Planejamento</option>
-                    <option value="2">Fase 2 — Capacitação e Sistema</option>
-                    <option value="3">Fase 3 — Acompanhamento</option>
-                    <option value="4">Fase 4 — Encerramento</option>
+                    @foreach(\App\Models\DeliverableTask::PHASES as $key => $label)
+                        <option value="{{ $key }}">{{ $label }}</option>
+                    @endforeach
                 </select>
 
                 <label class="form-check-label small text-muted d-flex align-items-center gap-1">
@@ -71,24 +70,45 @@
         </div>
     @endif
 
-    {{-- Colunas Kanban --}}
-    <div class="row g-3">
-        @foreach(['pendente' => ['Pendente', 'warning'], 'andamento' => ['Em Andamento', 'info'], 'concluido' => ['Concluído', 'success']] as $col => [$label, $color])
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center py-2">
-                    <strong class="small text-uppercase">{{ $label }}</strong>
-                    <span class="badge bg-{{ $color }}">{{ $tasksByStatus[$col]->count() }}</span>
-                </div>
-                <div class="card-body p-2" style="max-height:60vh;overflow-y:auto">
-                    @forelse($tasksByStatus[$col] as $task)
-                        @include('livewire.kanban._card', ['task' => $task, 'column' => $col, 'readonly' => $readonly])
-                    @empty
-                        <p class="text-center text-muted small py-4">Nenhuma tarefa</p>
-                    @endforelse
+    {{-- Colunas Kanban: fases do projeto --}}
+    @php
+        $phaseColors = ['1' => 'secondary', '2' => 'info', '3' => 'warning', '4' => 'primary', '5' => 'success', '6' => 'dark'];
+    @endphp
+    <div class="d-flex gap-3 overflow-auto pb-2">
+        @if($tasksByPhase['sem_fase']->isNotEmpty())
+            <div class="flex-shrink-0" style="width:290px">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <strong class="small text-uppercase">Sem fase</strong>
+                        <span class="badge bg-secondary">{{ $tasksByPhase['sem_fase']->count() }}</span>
+                    </div>
+                    <div class="card-body p-2" style="max-height:60vh;overflow-y:auto">
+                        @forelse($tasksByPhase['sem_fase'] as $task)
+                            @include('livewire.kanban._card', ['task' => $task, 'column' => 'sem_fase', 'readonly' => $readonly])
+                        @empty
+                            <p class="text-center text-muted small py-4">Nenhuma tarefa</p>
+                        @endforelse
+                    </div>
                 </div>
             </div>
-        </div>
+        @endif
+        @foreach(\App\Models\DeliverableTask::PHASES as $phase => $label)
+            @php $column = (string) $phase; @endphp
+            <div class="flex-shrink-0" style="width:290px">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <strong class="small text-uppercase">{{ $label }}</strong>
+                        <span class="badge bg-{{ $phaseColors[$column] ?? 'secondary' }}">{{ $tasksByPhase[$column]->count() }}</span>
+                    </div>
+                    <div class="card-body p-2" style="max-height:60vh;overflow-y:auto">
+                        @forelse($tasksByPhase[$column] as $task)
+                            @include('livewire.kanban._card', ['task' => $task, 'column' => $column, 'readonly' => $readonly])
+                        @empty
+                            <p class="text-center text-muted small py-4">Nenhuma tarefa</p>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
         @endforeach
     </div>
 
@@ -120,6 +140,7 @@
                                         <option value="andamento">Em Andamento</option>
                                         <option value="concluido">Concluído</option>
                                     </select>
+                                    @error('taskStatus') <span class="text-danger small">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Prioridade</label>
