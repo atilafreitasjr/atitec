@@ -25,7 +25,7 @@
             @if($lead->details)
                 <hr>
                 <p class="text-uppercase small text-muted mb-1">Sua solicitação</p>
-                <p class="mb-0 text-break" style="white-space:pre-line">{{ $lead->details }}</p>
+                <div class="text-break">{!! \App\Support\Markdown::render($lead->details) !!}</div>
             @endif
 
             @if($lead->proposal_sent_at)

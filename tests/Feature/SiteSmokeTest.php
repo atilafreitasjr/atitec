@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Client;
+use App\Models\Lead;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -37,6 +38,64 @@ class SiteSmokeTest extends TestCase
         $this->assertDatabaseHas('leads', ['email' => 'cliente@teste.com', 'status' => 'novo']);
     }
 
+    public function test_orcamento_estima_investimento_a_partir_das_escolhas(): void
+    {
+        $this->seed();
+
+        $this->post('/orcamento', [
+            'name' => 'Cliente Estimativa',
+            'email' => 'estimativa@teste.com',
+            'project_type' => 'Software sob medida',
+            'requirements' => ['painel', 'whatsapp'],
+            'infrastructure' => ['servidor', 'dominio'],
+            'deadline' => 'normal',
+            'budget_range' => 'R$ 4.000 a R$ 6.000',
+            'details' => 'Preciso de um sistema com painel e WhatsApp.',
+        ])->assertRedirect('/orcamento');
+
+        $lead = Lead::where('email', 'estimativa@teste.com')->firstOrFail();
+        $estimate = $lead->requirements;
+
+        // 40 h (tipo) + 20 h (painel) + 12 h (WhatsApp) = 72 h × R$ 50 × 1,1 (prazo) = R$ 3.960
+        // (o JSON do MariaDB normaliza números inteiros — daí a comparação exata)
+        $this->assertSame(72, $estimate['hours']);
+        $this->assertSame(3960, $estimate['development']);
+        $this->assertSame(2040, $estimate['setup']); // servidor R$ 2.000 + domínio R$ 40
+        $this->assertSame(150, $estimate['monthly']); // servidor R$ 150/mês
+        $this->assertSame(6000, $estimate['total']);
+        $this->assertSame(['min' => 4800, 'max' => 7500], $estimate['range']);
+
+        $admin = User::where('email', 'admin@atitec.com.br')->firstOrFail();
+        $this->actingAs($admin)->get(route('admin.leads.show', $lead))
+            ->assertOk()
+            ->assertSee('Perfil do orçamento e estimativa')
+            ->assertSee('Painel administrativo')
+            ->assertSee('Servidor e banco de dados dedicados')
+            ->assertSee('Total estimado:');
+    }
+
+    public function test_markdown_do_orcamento_e_renderizado_com_seguranca_no_admin(): void
+    {
+        $this->seed();
+
+        $this->post('/orcamento', [
+            'name' => 'Cliente Markdown',
+            'email' => 'markdown@teste.com',
+            'project_type' => 'Software sob medida',
+            'details' => "**Importante**\n\n- Prazo curto\n- Orçamento definido\n\n<script>alert('xss')</script>\n\n[link ruim](javascript:alert('xss'))",
+        ])->assertRedirect('/orcamento');
+
+        $lead = Lead::where('email', 'markdown@teste.com')->firstOrFail();
+        $admin = User::where('email', 'admin@atitec.com.br')->firstOrFail();
+
+        $this->actingAs($admin)->get(route('admin.leads.show', $lead))
+            ->assertOk()
+            ->assertSee('<strong>Importante</strong>', false)
+            ->assertSee('<li>Prazo curto</li>', false)
+            ->assertDontSee('<script>alert', false)
+            ->assertDontSee('href="javascript:', false);
+    }
+
     public function test_orcamento_de_cliente_existente_vincula_ao_workspace(): void
     {
         $client = Client::create(['name' => 'Cliente Existente', 'email' => 'existente@teste.com']);
@@ -44,7 +103,7 @@ class SiteSmokeTest extends TestCase
         $this->post('/orcamento', [
             'name' => $client->name,
             'email' => $client->email,
-            'project_type' => 'Sistema interno',
+            'project_type' => 'Software sob medida',
             'details' => 'Novo módulo para o projeto.',
         ])->assertRedirect('/orcamento');
 

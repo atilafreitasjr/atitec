@@ -9,7 +9,7 @@ class Lead extends Model
 {
     protected $fillable = [
         'name', 'email', 'phone', 'company', 'project_type',
-        'budget_range', 'details', 'status', 'source', 'client_id',
+        'budget_range', 'requirements', 'details', 'status', 'source', 'client_id',
         'proposal_title', 'proposal_summary', 'proposal_amount', 'proposal_valid_until',
         'proposal_status', 'proposal_sent_at', 'proposal_responded_at', 'converted_project_id',
     ];
@@ -17,6 +17,7 @@ class Lead extends Model
     protected function casts(): array
     {
         return [
+            'requirements' => 'array',
             'proposal_amount' => 'decimal:2',
             'proposal_valid_until' => 'date',
             'proposal_sent_at' => 'datetime',

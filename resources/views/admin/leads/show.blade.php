@@ -29,9 +29,55 @@
                 </div>
                 <div class="rounded-3 p-3 bg-body-secondary">
                     <div class="text-muted small mb-1">Necessidade informada</div>
-                    <div class="text-break" style="white-space:pre-wrap">{{ $lead->details ?: 'Nenhum detalhe informado.' }}</div>
+                    <div class="text-break">{!! $lead->details ? \App\Support\Markdown::render($lead->details) : 'Nenhum detalhe informado.' !!}</div>
                 </div>
             </x-adminlte-card>
+
+            @if($lead->requirements)
+                @php $req = $lead->requirements; @endphp
+                <x-adminlte-card title="Perfil do orçamento e estimativa" theme="info" icon="bi bi-calculator">
+                    <div class="row g-2 small">
+                        @if(! empty($req['type']))
+                            <div class="col-md-6"><span class="text-muted">Tipo de projeto</span><div class="fw-semibold">{{ $req['type'] }} <span class="text-muted">({{ number_format((float) ($req['type_hours'] ?? 0), 0, ',', '.') }} h base)</span></div></div>
+                        @endif
+                        @if(! empty($req['deadline']))
+                            <div class="col-md-6"><span class="text-muted">Prazo</span><div class="fw-semibold">{{ $req['deadline']['label'] }} <span class="text-muted">(×{{ number_format((float) $req['deadline']['multiplier'], 2, ',', '.') }})</span></div></div>
+                        @endif
+                    </div>
+
+                    @if(! empty($req['scope']))
+                        <hr class="my-2">
+                        <span class="text-muted small">Necessidades marcadas</span>
+                        <ul class="mb-2 small">
+                            @foreach($req['scope'] as $item)
+                                <li>{{ $item['label'] }} — {{ number_format((float) $item['hours'], 0, ',', '.') }} h (R$ {{ number_format((float) $item['cost'], 2, ',', '.') }})@if(! empty($item['monthly'])) + R$ {{ number_format((float) $item['monthly'], 2, ',', '.') }}/mês @endif</li>
+                            @endforeach
+                        </ul>
+                    @endif
+
+                    @if(! empty($req['infrastructure']))
+                        <span class="text-muted small">Infraestrutura e serviços</span>
+                        <ul class="mb-2 small">
+                            @foreach($req['infrastructure'] as $item)
+                                <li>{{ $item['label'] }}@if(! empty($item['setup'])) — implantação R$ {{ number_format((float) $item['setup'], 2, ',', '.') }}@endif @if(! empty($item['monthly'])) + R$ {{ number_format((float) $item['monthly'], 2, ',', '.') }}/mês @endif</li>
+                            @endforeach
+                        </ul>
+                    @endif
+
+                    <div class="rounded-3 p-3 bg-body-secondary small">
+                        <div class="d-flex flex-wrap justify-content-between gap-2">
+                            <span><strong>{{ number_format((float) ($req['hours'] ?? 0), 0, ',', '.') }} h</strong> × R$ {{ number_format((float) ($req['hourly_rate'] ?? 0), 2, ',', '.') }} = <strong>R$ {{ number_format((float) ($req['development'] ?? 0), 2, ',', '.') }}</strong>@if((float) ($req['setup'] ?? 0) > 0) + <strong>R$ {{ number_format((float) $req['setup'], 2, ',', '.') }}</strong> de implantação @endif</span>
+                            <span>Total estimado: <strong>R$ {{ number_format((float) ($req['total'] ?? 0), 2, ',', '.') }}</strong></span>
+                        </div>
+                        <div class="d-flex flex-wrap justify-content-between gap-2 mt-1">
+                            <span>Faixa apresentada: <strong>R$ {{ number_format((float) ($req['range']['min'] ?? 0), 0, ',', '.') }} a R$ {{ number_format((float) ($req['range']['max'] ?? 0), 0, ',', '.') }}</strong></span>
+                            @if((float) ($req['monthly'] ?? 0) > 0)
+                                <span>Recorrente: <strong>R$ {{ number_format((float) $req['monthly'], 2, ',', '.') }}/mês</strong></span>
+                            @endif
+                        </div>
+                    </div>
+                </x-adminlte-card>
+            @endif
 
             <x-adminlte-card title="Proposta comercial" theme="warning" icon="bi bi-file-earmark-text">
                 @if($lead->proposal_status === 'enviada' || $lead->proposal_status === 'aceita' || $lead->proposal_status === 'recusada' || $lead->proposal_status === 'convertida')

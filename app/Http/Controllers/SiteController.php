@@ -6,8 +6,10 @@ use App\Models\Channel;
 use App\Models\Client;
 use App\Models\Lead;
 use App\Models\Project;
+use App\Support\BudgetEstimator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -82,23 +84,43 @@ class SiteController extends Controller
 
     public function orcamento(Request $request): View
     {
-        return view('site.orcamento', ['prefill' => $this->contactPrefill($request)]);
+        return view('site.orcamento', [
+            'prefill' => $this->contactPrefill($request),
+            'orcamento' => config('orcamento'),
+        ]);
     }
 
     public function orcamentoStore(Request $request): RedirectResponse
     {
+        $orcamento = config('orcamento');
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:160'],
             'phone' => ['nullable', 'string', 'max:40'],
             'company' => ['nullable', 'string', 'max:160'],
-            'project_type' => ['required', 'string', 'max:80'],
+            'project_type' => ['required', Rule::in(array_keys($orcamento['types']))],
+            'requirements' => ['nullable', 'array'],
+            'requirements.*' => [Rule::in(array_keys($orcamento['scope']))],
+            'infrastructure' => ['nullable', 'array'],
+            'infrastructure.*' => [Rule::in(array_keys($orcamento['infrastructure']))],
+            'deadline' => ['nullable', Rule::in(array_keys($orcamento['deadlines']))],
             'budget_range' => ['nullable', 'string', 'max:80'],
             'details' => ['required', 'string', 'max:5000'],
         ]);
 
+        $estimate = BudgetEstimator::estimate(
+            $data['project_type'],
+            $data['requirements'] ?? [],
+            $data['infrastructure'] ?? [],
+            $data['deadline'] ?? null,
+        );
+
+        unset($data['requirements'], $data['infrastructure'], $data['deadline']);
+
         Lead::create([
             ...$data,
+            'requirements' => $estimate,
             'client_id' => $this->clientIdForLead($request, $data['email']),
             'status' => 'novo',
             'source' => 'site/orcamento',
