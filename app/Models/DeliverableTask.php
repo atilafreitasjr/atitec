@@ -18,7 +18,7 @@ class DeliverableTask extends Model
 
     public const PRIORITIES = ['baixa', 'media', 'alta'];
 
-    /** Fases do projeto exibidas no formulário de tarefa e no filtro do Kanban. */
+    /** Fases do projeto exibidas no formulário de tarefa e nas colunas do Kanban. */
     public const PHASES = [
         '1' => 'Planejamento',
         '2' => 'Proposta Enviada',

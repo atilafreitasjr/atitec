@@ -26,10 +26,6 @@ class Board extends Component
 
     public $selectedPriority = null;
 
-    public $selectedPhase = null;
-
-    public $showFinished = false;
-
     public $showModal = false;
 
     public $editingTask = null;
@@ -65,27 +61,21 @@ class Board extends Component
 
     public function loadDeliverables()
     {
-        $query = Deliverable::where('project_id', $this->projectId)->withCount('tasks');
-
-        if (! $this->showFinished) {
-            $query->where('status', '!=', 'concluido');
-        }
-
-        $this->deliverables = $query->orderByRaw('start_date IS NULL')->orderBy('start_date')->orderBy('created_at')->get();
+        $this->deliverables = Deliverable::where('project_id', $this->projectId)
+            ->withCount('tasks')
+            ->orderByRaw('start_date IS NULL')
+            ->orderBy('start_date')
+            ->orderBy('created_at')
+            ->get();
 
         if ($this->selectedDeliverable && ! $this->deliverables->contains('id', $this->selectedDeliverable)) {
             $this->selectedDeliverable = null;
         }
     }
 
-    public function updatedShowFinished(): void
-    {
-        $this->loadDeliverables();
-    }
-
     public function resetFilters()
     {
-        $this->reset(['search', 'selectedDeliverable', 'selectedUser', 'selectedPriority', 'selectedPhase']);
+        $this->reset(['search', 'selectedDeliverable', 'selectedUser', 'selectedPriority']);
     }
 
     public function getFilteredTasksQueryProperty()
@@ -95,7 +85,6 @@ class Board extends Component
             ->when($this->selectedDeliverable, fn ($q) => $q->where('deliverable_id', $this->selectedDeliverable))
             ->when($this->selectedUser, fn ($q) => $q->where('user_id', $this->selectedUser))
             ->when($this->selectedPriority, fn ($q) => $q->where('priority', $this->selectedPriority))
-            ->when($this->selectedPhase !== null && $this->selectedPhase !== '', fn ($q) => $q->where('phase', (string) $this->selectedPhase))
             ->when(trim((string) $this->search) !== '', function ($q) {
                 $term = '%'.trim($this->search).'%';
                 $q->where(function ($sub) use ($term) {
@@ -135,8 +124,7 @@ class Board extends Component
         return trim((string) $this->search) !== ''
             || ! empty($this->selectedDeliverable)
             || ! empty($this->selectedUser)
-            || ! empty($this->selectedPriority)
-            || ($this->selectedPhase !== null && $this->selectedPhase !== '');
+            || ! empty($this->selectedPriority);
     }
 
     public function openTaskModal($taskId)
@@ -248,7 +236,7 @@ class Board extends Component
             'title' => $this->newTaskTitle,
             'status' => 'pendente',
             'priority' => 'media',
-            'phase' => $this->selectedPhase !== null && $this->selectedPhase !== '' ? (string) $this->selectedPhase : '1',
+            'phase' => '1',
             'order' => $maxOrder + 1,
         ]);
 

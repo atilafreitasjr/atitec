@@ -41,17 +41,6 @@
                     <option value="baixa">Baixa</option>
                 </select>
 
-                <select wire:model.live="selectedPhase" class="form-select form-select-sm" style="width:auto">
-                    <option value="">Todas as fases</option>
-                    @foreach(\App\Models\DeliverableTask::PHASES as $key => $label)
-                        <option value="{{ $key }}">{{ $label }}</option>
-                    @endforeach
-                </select>
-
-                <label class="form-check-label small text-muted d-flex align-items-center gap-1">
-                    <input type="checkbox" wire:model.live="showFinished" class="form-check-input"> Entregas finalizadas
-                </label>
-
                 <button wire:click="resetFilters" class="btn btn-sm btn-link text-muted" @unless($this->hasActiveFilters()) disabled @endunless>Limpar</button>
             </div>
         </div>
