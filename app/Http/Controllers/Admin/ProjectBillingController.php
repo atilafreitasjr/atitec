@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DeliverableTask;
 use App\Models\Invoice;
 use App\Models\Project;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,10 +14,52 @@ use Illuminate\Validation\ValidationException;
 
 class ProjectBillingController extends Controller
 {
+    /**
+     * Tarefas faturáveis do projeto (JSON): concluídas, com custo e ainda não
+     * faturadas. Ao editar uma fatura, inclui também as tarefas já vinculadas a ela.
+     */
+    public function index(Request $request, Project $project): JsonResponse
+    {
+        $invoiceId = $request->integer('invoice');
+
+        $tasks = DeliverableTask::query()
+            ->with('deliverable:id,name')
+            ->where('project_id', $project->id)
+            ->where('status', 'concluido')
+            ->whereNotNull('hours_actual')
+            ->where('hours_actual', '>', 0)
+            ->when(
+                $invoiceId,
+                fn ($query) => $query->where(fn ($sub) => $sub->whereNull('invoice_id')->orWhere('invoice_id', $invoiceId)),
+                fn ($query) => $query->whereNull('invoice_id'),
+            )
+            ->orderBy('deliverable_id')
+            ->orderBy('title')
+            ->get()
+            ->map(fn (DeliverableTask $task) => [
+                'id' => $task->id,
+                'title' => $task->title,
+                'deliverable' => $task->deliverable?->name,
+                'hours' => (float) $task->hours_actual,
+                'rate' => (float) $task->hourly_rate,
+                'cost' => (float) $task->cost_actual,
+                'linked' => $invoiceId > 0 && (int) $task->invoice_id === $invoiceId,
+            ])
+            ->filter(fn (array $task) => $task['linked'] || $task['cost'] > 0)
+            ->values();
+
+        return response()->json(['tasks' => $tasks]);
+    }
+
     public function store(Request $request, Project $project): RedirectResponse
     {
         $data = $request->validate([
             'due_date' => ['required', 'date', 'after_or_equal:today'],
+            'task_ids' => ['required', 'array', 'min:1'],
+            'task_ids.*' => ['integer', 'distinct'],
+        ], [
+            'task_ids.required' => 'Selecione ao menos uma tarefa para cobrar.',
+            'task_ids.min' => 'Selecione ao menos uma tarefa para cobrar.',
         ]);
 
         if (! $project->client_id) {
@@ -28,6 +71,7 @@ class ProjectBillingController extends Controller
         $invoice = DB::transaction(function () use ($project, $data) {
             $tasks = DeliverableTask::query()
                 ->where('project_id', $project->id)
+                ->whereIn('id', $data['task_ids'])
                 ->where('status', 'concluido')
                 ->whereNull('invoice_id')
                 ->whereNotNull('hours_actual')
@@ -48,9 +92,9 @@ class ProjectBillingController extends Controller
                 ];
             })->filter(fn (array $line) => $line['cost'] > 0)->values();
 
-            if ($lines->isEmpty()) {
+            if ($lines->count() !== count($data['task_ids'])) {
                 throw ValidationException::withMessages([
-                    'project' => 'Não há tarefas concluídas, com horas realizadas e ainda não faturadas.',
+                    'task_ids' => 'Uma ou mais tarefas selecionadas não estão disponíveis para faturamento (já faturadas ou sem custo). Atualize a página e selecione novamente.',
                 ]);
             }
 
@@ -83,6 +127,6 @@ class ProjectBillingController extends Controller
         });
 
         return redirect()->route('admin.invoices.show', $invoice)
-            ->with('success', 'Cobrança criada com o custo das tarefas realizadas.');
+            ->with('success', 'Cobrança criada com as tarefas selecionadas. As tarefas cobradas saem da lista de faturamento.');
     }
 }

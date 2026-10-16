@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Client;
+use App\Models\DeliverableTask;
 use App\Models\Project;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,8 +41,21 @@ class ProjectController extends Controller
 
     public function show(Project $project): View
     {
+        $billableTasks = $project->deliverableTasks()
+            ->with('deliverable')
+            ->where('status', 'concluido')
+            ->whereNull('invoice_id')
+            ->whereNotNull('hours_actual')
+            ->where('hours_actual', '>', 0)
+            ->orderBy('deliverable_id')
+            ->orderBy('title')
+            ->get()
+            ->filter(fn (DeliverableTask $task) => (float) $task->cost_actual > 0)
+            ->values();
+
         return view('admin.projects.show', [
             'project' => $project->load(['client', 'tasks', 'invoices', 'deliverables.tasks.invoice', 'documents.uploader']),
+            'billableTasks' => $billableTasks,
         ]);
     }
 

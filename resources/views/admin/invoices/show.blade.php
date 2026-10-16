@@ -23,6 +23,12 @@
                 <a href="https://wa.me/{{ $whatsappPhone }}?text={{ rawurlencode($message) }}" target="_blank" rel="noopener noreferrer" class="btn btn-success"><i class="bi bi-whatsapp me-1"></i> Preparar WhatsApp</a>
             @endif
             <a href="{{ route('admin.invoices.edit', $invoice) }}" class="btn btn-outline-primary">Editar</a>
+            @can('invoice.delete')
+                <form method="POST" action="{{ route('admin.invoices.destroy', $invoice) }}" onsubmit="return confirm('Excluir esta fatura? As tarefas vinculadas voltarão a ficar disponíveis para faturamento e os pagamentos registrados serão removidos. Esta ação não pode ser desfeita.')">
+                    @csrf @method('DELETE')
+                    <button class="btn btn-outline-danger"><i class="bi bi-trash me-1"></i> Excluir</button>
+                </form>
+            @endcan
         </div>
     </div>
 @stop

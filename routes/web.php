@@ -124,6 +124,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:ad
             ->name('documents.destroy')->middleware('permission:project.edit');
         Route::post('invoices/from-tasks', [ProjectBillingController::class, 'store'])
             ->name('invoices.from-tasks')->middleware(['permission:invoice.create', 'permission:task.view']);
+        Route::get('billable-tasks', [ProjectBillingController::class, 'index'])
+            ->name('billable-tasks')->middleware(['permission:invoice.create', 'permission:task.view']);
         Route::get('kanban', [ProjectKanbanController::class, 'kanban'])
             ->name('kanban')->middleware('permission:deliverable.view|task.view');
         Route::get('deliverables', [ProjectKanbanController::class, 'deliverablesIndex'])

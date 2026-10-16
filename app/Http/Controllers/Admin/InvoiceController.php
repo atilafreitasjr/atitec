@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Client;
+use App\Models\DeliverableTask;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Project;
@@ -37,20 +38,26 @@ class InvoiceController extends Controller
     {
         $data = $this->validated($request);
         $pdf = $data['pdf'] ?? null;
-        unset($data['pdf']);
+        unset($data['pdf'], $data['task_ids']);
 
-        $invoice = Invoice::create($data);
+        $invoice = DB::transaction(function () use ($request, $data) {
+            $invoice = Invoice::create($data);
 
-        if ($invoice->status === 'pago') {
-            $paidAt = $invoice->paid_at ?? now();
-            $invoice->payments()->create([
-                'amount' => $invoice->amount,
-                'paid_at' => $paidAt,
-                'method' => 'manual',
-                'notes' => 'Pagamento inicial registrado ao criar a fatura como paga.',
-            ]);
-            $invoice->update(['paid_at' => $paidAt]);
-        }
+            if ($invoice->status === 'pago') {
+                $paidAt = $invoice->paid_at ?? now();
+                $invoice->payments()->create([
+                    'amount' => $invoice->amount,
+                    'paid_at' => $paidAt,
+                    'method' => 'manual',
+                    'notes' => 'Pagamento inicial registrado ao criar a fatura como paga.',
+                ]);
+                $invoice->update(['paid_at' => $paidAt]);
+            }
+
+            $this->syncBilledTasks($request, $invoice);
+
+            return $invoice;
+        });
 
         if ($pdf) {
             $invoice->update(['pdf_path' => $pdf->store('invoices/'.$invoice->id, 'local')]);
@@ -79,7 +86,7 @@ class InvoiceController extends Controller
     {
         $data = $this->validated($request);
         $pdf = $data['pdf'] ?? null;
-        unset($data['pdf']);
+        unset($data['pdf'], $data['task_ids']);
 
         if ((float) $data['amount'] < round($invoice->paidAmount() + $invoice->discountAmount(), 2)) {
             return back()->withInput()->withErrors([
@@ -87,17 +94,22 @@ class InvoiceController extends Controller
             ]);
         }
 
-        if (($data['status'] ?? null) === 'pago' && $invoice->balance() > 0) {
-            $remaining = $invoice->balance();
-            $invoice->payments()->create([
-                'amount' => $remaining,
-                'paid_at' => $data['paid_at'] ?? now(),
-                'method' => 'manual',
-                'notes' => 'Pagamento registrado ao marcar a fatura como paga.',
-            ]);
-        }
+        DB::transaction(function () use ($request, $invoice, $data) {
+            if (($data['status'] ?? null) === 'pago' && $invoice->balance() > 0) {
+                $remaining = $invoice->balance();
+                $invoice->payments()->create([
+                    'amount' => $remaining,
+                    'paid_at' => $data['paid_at'] ?? now(),
+                    'method' => 'manual',
+                    'notes' => 'Pagamento registrado ao marcar a fatura como paga.',
+                ]);
+            }
 
-        $invoice->update($data);
+            $invoice->fill($data);
+            $this->syncBilledTasks($request, $invoice);
+            $invoice->save();
+        });
+
         $this->syncStatus($invoice);
 
         if ($pdf) {
@@ -114,19 +126,25 @@ class InvoiceController extends Controller
 
     public function destroy(Invoice $invoice): RedirectResponse
     {
-        if ($invoice->payments()->exists() || $invoice->billedTasks()->exists()) {
-            return back()->withErrors([
-                'invoice' => 'Esta fatura possui pagamentos ou tarefas vinculadas. Altere o status para cancelado para preservar o histórico.',
-            ]);
-        }
+        DB::transaction(function () use ($invoice) {
+            $locked = Invoice::whereKey($invoice->id)->lockForUpdate()->firstOrFail();
 
-        if ($invoice->pdf_path) {
-            Storage::disk('local')->delete($invoice->pdf_path);
-        }
+            // Desvincula as tarefas cobradas: voltam a ficar disponíveis para faturamento.
+            DeliverableTask::withTrashed()
+                ->where('invoice_id', $locked->id)
+                ->update(['invoice_id' => null]);
 
-        $invoice->delete();
+            $locked->payments()->delete();
 
-        return redirect()->route('admin.invoices.index')->with('success', 'Fatura excluída.');
+            if ($locked->pdf_path) {
+                Storage::disk('local')->delete($locked->pdf_path);
+            }
+
+            $locked->delete();
+        });
+
+        return redirect()->route('admin.invoices.index')
+            ->with('success', 'Fatura excluída. As tarefas vinculadas voltaram a ficar disponíveis para faturamento.');
     }
 
     public function paymentStore(Request $request, Invoice $invoice): RedirectResponse
@@ -241,6 +259,67 @@ class InvoiceController extends Controller
         ];
     }
 
+    /**
+     * Sincroniza as tarefas vinculadas à fatura quando o formulário envia a
+     * seleção (marcador tasks_synced). Tarefas desmarcadas são desvinculadas e
+     * voltam a ficar disponíveis para faturamento.
+     */
+    private function syncBilledTasks(Request $request, Invoice $invoice): void
+    {
+        if (! $request->boolean('tasks_synced')) {
+            return;
+        }
+
+        $submitted = collect($request->input('task_ids', []))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        if ($submitted->isEmpty() && ! $invoice->project_id) {
+            return;
+        }
+
+        if (! $invoice->project_id) {
+            throw ValidationException::withMessages([
+                'task_ids' => 'Escolha um projeto para vincular tarefas à fatura.',
+            ]);
+        }
+
+        $currentlyLinked = DeliverableTask::withTrashed()
+            ->where('invoice_id', $invoice->id)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id);
+
+        $newIds = $submitted->diff($currentlyLinked)->values();
+
+        $eligible = DeliverableTask::query()
+            ->where('project_id', $invoice->project_id)
+            ->whereIn('id', $newIds)
+            ->where('status', 'concluido')
+            ->whereNull('invoice_id')
+            ->whereNotNull('hours_actual')
+            ->where('hours_actual', '>', 0)
+            ->get()
+            ->filter(fn (DeliverableTask $task) => (float) $task->cost_actual > 0)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id);
+
+        if ($eligible->count() !== $newIds->count()) {
+            throw ValidationException::withMessages([
+                'task_ids' => 'Uma ou mais tarefas selecionadas não estão disponíveis para faturamento (já faturadas ou sem custo). Atualize a página e selecione novamente.',
+            ]);
+        }
+
+        DeliverableTask::withTrashed()
+            ->where('invoice_id', $invoice->id)
+            ->whereNotIn('id', $submitted->all())
+            ->update(['invoice_id' => null]);
+
+        if ($eligible->isNotEmpty()) {
+            DeliverableTask::whereIn('id', $eligible->all())->update(['invoice_id' => $invoice->id]);
+        }
+    }
+
     /** Recalcula o status da fatura considerando pagamentos + cortesia. */
     private function syncStatus(Invoice $invoice): void
     {
@@ -292,6 +371,8 @@ class InvoiceController extends Controller
             'external_id' => ['nullable', 'string', 'max:120'],
             'notes' => ['nullable', 'string'],
             'pdf' => ['nullable', 'file', 'mimes:pdf', 'max:20480'],
+            'task_ids' => ['nullable', 'array'],
+            'task_ids.*' => ['integer', 'distinct'],
         ]);
 
         if (! empty($data['project_id'])) {

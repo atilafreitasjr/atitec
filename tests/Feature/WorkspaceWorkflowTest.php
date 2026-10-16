@@ -203,6 +203,7 @@ class WorkspaceWorkflowTest extends TestCase
 
         $this->actingAs($admin)->post(route('admin.projects.invoices.from-tasks', $project), [
             'due_date' => today()->addDays(14)->format('Y-m-d'),
+            'task_ids' => [$task->id],
         ])->assertRedirect();
 
         $invoice = Invoice::where('project_id', $project->id)->firstOrFail();
@@ -211,9 +212,301 @@ class WorkspaceWorkflowTest extends TestCase
         $this->assertSame(0.0, $project->fresh()->unbilled_actual_cost);
 
         $this->from(route('admin.projects.show', $project))
-            ->post(route('admin.projects.invoices.from-tasks', $project), ['due_date' => today()->addDays(14)->format('Y-m-d')])
-            ->assertSessionHasErrors('project');
+            ->post(route('admin.projects.invoices.from-tasks', $project), [
+                'due_date' => today()->addDays(14)->format('Y-m-d'),
+                'task_ids' => [$task->id],
+            ])
+            ->assertSessionHasErrors('task_ids');
         $this->assertSame(1, Invoice::where('project_id', $project->id)->count());
+    }
+
+    public function test_fatura_cobre_apenas_as_tarefas_selecionadas(): void
+    {
+        [$client] = $this->clientWithUser();
+        $admin = $this->admin();
+        $project = Project::create([
+            'client_id' => $client->id,
+            'title' => 'Projeto com duas tarefas',
+            'slug' => 'projeto-com-duas-tarefas',
+            'description' => 'Projeto de teste.',
+            'status' => 'em_desenvolvimento',
+            'progress' => 60,
+            'sort_order' => 1,
+        ]);
+        $deliverable = Deliverable::create(['project_id' => $project->id, 'name' => 'Implementação']);
+        $primeira = DeliverableTask::create([
+            'project_id' => $project->id,
+            'deliverable_id' => $deliverable->id,
+            'title' => 'Tarefa que será cobrada',
+            'status' => 'concluido',
+            'priority' => 'media',
+            'hours_actual' => 2.5,
+            'hourly_rate' => 120,
+        ]);
+        $segunda = DeliverableTask::create([
+            'project_id' => $project->id,
+            'deliverable_id' => $deliverable->id,
+            'title' => 'Tarefa que fica para depois',
+            'status' => 'concluido',
+            'priority' => 'media',
+            'hours_actual' => 1,
+            'hourly_rate' => 100,
+        ]);
+
+        $this->actingAs($admin)->post(route('admin.projects.invoices.from-tasks', $project), [
+            'due_date' => today()->addDays(14)->format('Y-m-d'),
+            'task_ids' => [$primeira->id],
+        ])->assertRedirect();
+
+        $invoice = Invoice::where('project_id', $project->id)->firstOrFail();
+        $this->assertSame('300.00', $invoice->amount);
+        $this->assertSame($invoice->id, $primeira->fresh()->invoice_id);
+        $this->assertNull($segunda->fresh()->invoice_id);
+        $this->assertSame(100.0, $project->fresh()->unbilled_actual_cost);
+        $this->assertStringNotContainsString('Tarefa que fica para depois', (string) $invoice->description);
+
+        $this->actingAs($admin)->get(route('admin.projects.show', $project))
+            ->assertOk()
+            ->assertSee('name="task_ids[]" value="'.$segunda->id.'"', false)
+            ->assertDontSee('name="task_ids[]" value="'.$primeira->id.'"', false);
+
+        $this->post(route('admin.projects.invoices.from-tasks', $project), [
+            'due_date' => today()->addDays(14)->format('Y-m-d'),
+            'task_ids' => [$segunda->id],
+        ])->assertRedirect();
+
+        $segundaFatura = Invoice::where('project_id', $project->id)->where('id', '!=', $invoice->id)->firstOrFail();
+        $this->assertSame('100.00', $segundaFatura->amount);
+        $this->assertSame($segundaFatura->id, $segunda->fresh()->invoice_id);
+        $this->assertSame(0.0, $project->fresh()->unbilled_actual_cost);
+    }
+
+    public function test_excluir_fatura_desvincula_tarefas_e_permite_editar_horas(): void
+    {
+        [$client] = $this->clientWithUser();
+        $admin = $this->admin();
+        $project = Project::create([
+            'client_id' => $client->id,
+            'title' => 'Projeto para correção de horas',
+            'slug' => 'projeto-correcao-horas',
+            'description' => 'Projeto de teste.',
+            'status' => 'em_desenvolvimento',
+            'progress' => 60,
+            'sort_order' => 1,
+        ]);
+        $deliverable = Deliverable::create(['project_id' => $project->id, 'name' => 'Implementação']);
+        $task = DeliverableTask::create([
+            'project_id' => $project->id,
+            'deliverable_id' => $deliverable->id,
+            'title' => 'Tarefa com horas erradas',
+            'status' => 'concluido',
+            'priority' => 'media',
+            'hours_actual' => 10,
+            'hourly_rate' => 100,
+        ]);
+
+        $this->actingAs($admin)->post(route('admin.projects.invoices.from-tasks', $project), [
+            'due_date' => today()->addDays(14)->format('Y-m-d'),
+            'task_ids' => [$task->id],
+        ])->assertRedirect();
+
+        $invoice = Invoice::where('project_id', $project->id)->firstOrFail();
+        $this->post(route('admin.invoices.payments.store', $invoice), [
+            'amount' => 100,
+            'paid_at' => today()->format('Y-m-d'),
+            'method' => 'pix',
+        ])->assertRedirect();
+
+        Livewire::test(Edit::class, ['projectId' => $project->id, 'taskId' => $task->id])
+            ->set('hours_actual', '6')
+            ->call('save')
+            ->assertHasErrors('financial');
+
+        $this->delete(route('admin.invoices.destroy', $invoice))->assertRedirect(route('admin.invoices.index'));
+
+        $this->assertDatabaseMissing('invoices', ['id' => $invoice->id]);
+        $this->assertSame(0, Payment::where('invoice_id', $invoice->id)->count());
+        $this->assertNull($task->fresh()->invoice_id);
+        $this->assertSame(1000.0, $project->fresh()->unbilled_actual_cost);
+
+        Livewire::test(Edit::class, ['projectId' => $project->id, 'taskId' => $task->id])
+            ->set('hours_actual', '6')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame('6.00', $task->fresh()->hours_actual);
+        $this->assertSame(600.0, $project->fresh()->unbilled_actual_cost);
+
+        $this->post(route('admin.projects.invoices.from-tasks', $project), [
+            'due_date' => today()->addDays(14)->format('Y-m-d'),
+            'task_ids' => [$task->id],
+        ])->assertRedirect();
+
+        $novaFatura = Invoice::where('project_id', $project->id)->firstOrFail();
+        $this->assertSame('600.00', $novaFatura->amount);
+        $this->assertSame($novaFatura->id, $task->fresh()->invoice_id);
+    }
+
+    public function test_formulario_de_fatura_lista_e_vincula_tarefas_do_projeto(): void
+    {
+        [$client] = $this->clientWithUser();
+        $admin = $this->admin();
+        $project = Project::create([
+            'client_id' => $client->id,
+            'title' => 'Projeto fatura manual',
+            'slug' => 'projeto-fatura-manual',
+            'description' => 'Projeto de teste.',
+            'status' => 'em_desenvolvimento',
+            'progress' => 50,
+            'sort_order' => 1,
+        ]);
+        $deliverable = Deliverable::create(['project_id' => $project->id, 'name' => 'Implementação']);
+        $faturavel = DeliverableTask::create([
+            'project_id' => $project->id,
+            'deliverable_id' => $deliverable->id,
+            'title' => 'Tarefa faturável',
+            'status' => 'concluido',
+            'priority' => 'media',
+            'hours_actual' => 2.5,
+            'hourly_rate' => 120,
+        ]);
+        $outra = DeliverableTask::create([
+            'project_id' => $project->id,
+            'deliverable_id' => $deliverable->id,
+            'title' => 'Outra tarefa faturável',
+            'status' => 'concluido',
+            'priority' => 'media',
+            'hours_actual' => 1,
+            'hourly_rate' => 100,
+        ]);
+        $jaFaturada = DeliverableTask::create([
+            'project_id' => $project->id,
+            'deliverable_id' => $deliverable->id,
+            'title' => 'Tarefa já cobrada',
+            'status' => 'concluido',
+            'priority' => 'media',
+            'hours_actual' => 3,
+            'hourly_rate' => 100,
+        ]);
+        $faturaAntiga = Invoice::create([
+            'client_id' => $client->id,
+            'project_id' => $project->id,
+            'title' => 'Fatura antiga',
+            'amount' => 300,
+            'due_date' => today()->addDays(5)->format('Y-m-d'),
+            'status' => 'pendente',
+            'type' => 'projeto',
+        ]);
+        $jaFaturada->update(['invoice_id' => $faturaAntiga->id]);
+
+        $this->actingAs($admin)->get(route('admin.invoices.create'))
+            ->assertOk()
+            ->assertSee('Tarefas do projeto')
+            ->assertSee('data-invoice-tasks', false);
+
+        $this->getJson(route('admin.projects.billable-tasks', $project))
+            ->assertOk()
+            ->assertJsonCount(2, 'tasks')
+            ->assertJsonFragment(['id' => $faturavel->id])
+            ->assertJsonFragment(['id' => $outra->id])
+            ->assertJsonMissing(['id' => $jaFaturada->id]);
+
+        $this->post(route('admin.invoices.store'), [
+            'client_id' => $client->id,
+            'project_id' => $project->id,
+            'title' => 'Fatura manual',
+            'amount' => '300.00',
+            'due_date' => today()->addDays(10)->format('Y-m-d'),
+            'status' => 'pendente',
+            'type' => 'projeto',
+            'task_ids' => [$faturavel->id],
+            'tasks_synced' => '1',
+        ])->assertRedirect(route('admin.invoices.index'));
+
+        $invoice = Invoice::where('project_id', $project->id)->where('title', 'Fatura manual')->firstOrFail();
+        $this->assertSame($invoice->id, $faturavel->fresh()->invoice_id);
+        $this->assertNull($outra->fresh()->invoice_id);
+
+        $this->from(route('admin.invoices.create'))->post(route('admin.invoices.store'), [
+            'client_id' => $client->id,
+            'project_id' => $project->id,
+            'title' => 'Fatura inválida',
+            'amount' => '300.00',
+            'due_date' => today()->addDays(10)->format('Y-m-d'),
+            'status' => 'pendente',
+            'type' => 'projeto',
+            'task_ids' => [$jaFaturada->id],
+            'tasks_synced' => '1',
+        ])->assertSessionHasErrors('task_ids');
+
+        $this->assertFalse(Invoice::where('title', 'Fatura inválida')->exists());
+    }
+
+    public function test_editar_fatura_sincroniza_tarefas_marcadas_no_formulario(): void
+    {
+        [$client] = $this->clientWithUser();
+        $admin = $this->admin();
+        $project = Project::create([
+            'client_id' => $client->id,
+            'title' => 'Projeto edição de fatura',
+            'slug' => 'projeto-edicao-fatura',
+            'description' => 'Projeto de teste.',
+            'status' => 'em_desenvolvimento',
+            'progress' => 50,
+            'sort_order' => 1,
+        ]);
+        $deliverable = Deliverable::create(['project_id' => $project->id, 'name' => 'Implementação']);
+        $vinculada = DeliverableTask::create([
+            'project_id' => $project->id,
+            'deliverable_id' => $deliverable->id,
+            'title' => 'Tarefa vinculada',
+            'status' => 'concluido',
+            'priority' => 'media',
+            'hours_actual' => 2,
+            'hourly_rate' => 100,
+        ]);
+        $disponivel = DeliverableTask::create([
+            'project_id' => $project->id,
+            'deliverable_id' => $deliverable->id,
+            'title' => 'Tarefa disponível',
+            'status' => 'concluido',
+            'priority' => 'media',
+            'hours_actual' => 1,
+            'hourly_rate' => 100,
+        ]);
+        $invoice = Invoice::create([
+            'client_id' => $client->id,
+            'project_id' => $project->id,
+            'title' => 'Fatura editável',
+            'amount' => 200,
+            'due_date' => today()->addDays(10)->format('Y-m-d'),
+            'status' => 'pendente',
+            'type' => 'projeto',
+        ]);
+        $vinculada->update(['invoice_id' => $invoice->id]);
+
+        $base = [
+            'client_id' => $client->id,
+            'project_id' => $project->id,
+            'title' => 'Fatura editável',
+            'amount' => '200.00',
+            'due_date' => today()->addDays(10)->format('Y-m-d'),
+            'status' => 'pendente',
+            'type' => 'projeto',
+        ];
+
+        $this->actingAs($admin)->put(route('admin.invoices.update', $invoice), $base)
+            ->assertRedirect(route('admin.invoices.index'));
+        $this->assertSame($invoice->id, $vinculada->fresh()->invoice_id);
+
+        $this->put(route('admin.invoices.update', $invoice), [...$base, 'task_ids' => [], 'tasks_synced' => '1'])
+            ->assertRedirect(route('admin.invoices.index'));
+        $this->assertNull($vinculada->fresh()->invoice_id);
+
+        $this->put(route('admin.invoices.update', $invoice), [...$base, 'task_ids' => [$disponivel->id], 'tasks_synced' => '1'])
+            ->assertRedirect(route('admin.invoices.index'));
+        $this->assertSame($invoice->id, $disponivel->fresh()->invoice_id);
+        $this->assertNull($vinculada->fresh()->invoice_id);
     }
 
     public function test_pagamentos_parciais_atualizam_saldo_e_status_da_fatura(): void

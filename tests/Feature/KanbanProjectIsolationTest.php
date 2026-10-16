@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Livewire\Kanban\Board;
 use App\Livewire\Task\Create;
+use App\Livewire\Task\Index as TaskIndex;
 use App\Models\Client;
 use App\Models\Deliverable;
 use App\Models\DeliverableTask;
@@ -178,6 +179,39 @@ class KanbanProjectIsolationTest extends TestCase
 
         $board()->call('moveTask', $task->id, 'down');
         $this->assertSame('2', $task->fresh()->phase);
+    }
+
+    public function test_filtro_de_tarefas_por_entrega(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $project = $this->makeProject('Projeto do filtro');
+        $outroProjeto = $this->makeProject('Projeto vizinho');
+
+        $entregaA = Deliverable::create(['project_id' => $project->id, 'name' => 'Entrega Alpha', 'status' => 'andamento']);
+        $entregaB = Deliverable::create(['project_id' => $project->id, 'name' => 'Entrega Beta', 'status' => 'andamento']);
+        $entregaVizinha = Deliverable::create(['project_id' => $outroProjeto->id, 'name' => 'Entrega Vizinha', 'status' => 'andamento']);
+
+        DeliverableTask::create(['project_id' => $project->id, 'deliverable_id' => $entregaA->id, 'title' => 'Tarefa da Alpha', 'status' => 'pendente', 'priority' => 'media']);
+        DeliverableTask::create(['project_id' => $project->id, 'deliverable_id' => $entregaB->id, 'title' => 'Tarefa da Beta', 'status' => 'pendente', 'priority' => 'media']);
+
+        $this->actingAs($admin);
+
+        $this->get(route('admin.projects.tasks.index', $project))
+            ->assertOk()
+            ->assertSee('Entrega Alpha')
+            ->assertSee('Entrega Beta');
+
+        Livewire::test(TaskIndex::class, ['projectId' => $project->id])
+            ->set('deliverableFilter', $entregaA->id)
+            ->assertSee('Tarefa da Alpha')
+            ->assertDontSee('Tarefa da Beta')
+            ->set('deliverableFilter', $entregaB->id)
+            ->assertSee('Tarefa da Beta')
+            ->assertDontSee('Tarefa da Alpha')
+            ->set('deliverableFilter', $entregaVizinha->id)
+            ->assertDontSee('Tarefa da Alpha')
+            ->assertDontSee('Tarefa da Beta')
+            ->assertSee('Nenhuma tarefa encontrada.');
     }
 
     public function test_rotas_exigem_permissao(): void

@@ -90,15 +90,59 @@
             <x-adminlte-card title="Gerar cobrança pelas tarefas realizadas" icon="bi bi-receipt">
                 @if(! $project->client_id)
                     <div class="alert alert-warning mb-0">Associe um cliente ao projeto para emitir cobranças.</div>
-                @elseif($project->unbilled_actual_cost > 0)
-                    <p class="text-muted">Há <strong>R$ {{ number_format($project->unbilled_actual_cost, 2, ',', '.') }}</strong> em tarefas concluídas e ainda não faturadas. Cada tarefa será vinculada à fatura criada para impedir cobrança duplicada.</p>
+                @elseif($billableTasks->isNotEmpty())
+                    <p class="text-muted">Marque as tarefas que devem entrar nesta cobrança. Só aparecem aqui as tarefas concluídas, com custo realizado e ainda não faturadas — tarefas já cobradas em faturas anteriores não são listadas novamente.</p>
+                    @error('task_ids')<div class="alert alert-danger py-2">{{ $message }}</div>@enderror
                     @can('invoice.create')
                         @can('task.view')
-                            <form method="POST" action="{{ route('admin.projects.invoices.from-tasks', $project) }}" class="row g-2 align-items-end">
+                            <form method="POST" action="{{ route('admin.projects.invoices.from-tasks', $project) }}">
                                 @csrf
-                                <div class="col-md-4"><label class="form-label" for="task_invoice_due_date">Vencimento</label><input id="task_invoice_due_date" type="date" name="due_date" class="form-control" min="{{ today()->format('Y-m-d') }}" value="{{ old('due_date', today()->addDays(14)->format('Y-m-d')) }}" required></div>
-                                <div class="col-md-8"><button class="btn btn-primary"><i class="bi bi-receipt me-1"></i> Gerar fatura de R$ {{ number_format($project->unbilled_actual_cost, 2, ',', '.') }}</button></div>
+                                <div class="table-responsive">
+                                    <table class="table table-sm align-middle">
+                                        <thead><tr>
+                                            <th style="width:36px"><input type="checkbox" class="form-check-input" id="billing-check-all" checked aria-label="Selecionar todas"></th>
+                                            <th>Tarefa</th>
+                                            <th>Entrega</th>
+                                            <th class="text-end">h realizadas</th>
+                                            <th class="text-end">Valor/h</th>
+                                            <th class="text-end">Custo</th>
+                                        </tr></thead>
+                                        <tbody>
+                                            @foreach($billableTasks as $task)
+                                                <tr>
+                                                    <td><input type="checkbox" class="form-check-input billing-task" name="task_ids[]" value="{{ $task->id }}" data-cost="{{ number_format((float) $task->cost_actual, 2, '.', '') }}" checked aria-label="Cobrar {{ $task->title }}"></td>
+                                                    <td>{{ $task->title }}</td>
+                                                    <td>{{ $task->deliverable?->name ?? '—' }}</td>
+                                                    <td class="text-end">{{ number_format((float) $task->hours_actual, 2, ',', '.') }}</td>
+                                                    <td class="text-end">R$ {{ number_format((float) $task->hourly_rate, 2, ',', '.') }}</td>
+                                                    <td class="text-end">R$ {{ number_format((float) $task->cost_actual, 2, ',', '.') }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="row g-2 align-items-end">
+                                    <div class="col-md-4"><label class="form-label" for="task_invoice_due_date">Vencimento</label><input id="task_invoice_due_date" type="date" name="due_date" class="form-control" min="{{ today()->format('Y-m-d') }}" value="{{ old('due_date', today()->addDays(14)->format('Y-m-d')) }}" required></div>
+                                    <div class="col-md-8"><button class="btn btn-primary" id="billing-submit"><i class="bi bi-receipt me-1"></i> Gerar fatura de <span id="billing-total">R$ 0,00</span></button></div>
+                                </div>
                             </form>
+                            <script>
+                            (function () {
+                                var boxes = Array.prototype.slice.call(document.querySelectorAll('.billing-task'));
+                                var all = document.getElementById('billing-check-all');
+                                var totalEl = document.getElementById('billing-total');
+                                var button = document.getElementById('billing-submit');
+                                function refresh() {
+                                    var total = boxes.filter(function (b) { return b.checked; }).reduce(function (sum, b) { return sum + parseFloat(b.dataset.cost || '0'); }, 0);
+                                    totalEl.textContent = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                    button.disabled = total <= 0;
+                                    if (all) { all.checked = boxes.length > 0 && boxes.every(function (b) { return b.checked; }); all.indeterminate = !all.checked && boxes.some(function (b) { return b.checked; }); }
+                                }
+                                if (all) { all.addEventListener('change', function () { boxes.forEach(function (b) { b.checked = all.checked; }); refresh(); }); }
+                                boxes.forEach(function (b) { b.addEventListener('change', refresh); });
+                                refresh();
+                            })();
+                            </script>
                         @endcan
                     @endcan
                 @else

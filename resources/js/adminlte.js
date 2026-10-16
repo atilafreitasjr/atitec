@@ -17,6 +17,9 @@ import './masks'
 // Mostrar/ocultar senha + checklist de regras (compartilhado com o site/portal)
 import './password'
 
+// Seleção das tarefas faturáveis ao criar/editar uma fatura no admin
+import './invoice-tasks'
+
 // Ao escolher um projeto na fatura, reaproveita o cliente já vinculado a ele.
 document.addEventListener('change', (event) => {
   const project = event.target.closest('[data-sync-project-client]')

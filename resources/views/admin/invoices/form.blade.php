@@ -24,6 +24,16 @@
                 </x-adminlte-select></div>
             </div>
             <x-adminlte-textarea name="description" label="Descrição" rows="2">{{ old('description', $invoice->description) }}</x-adminlte-textarea>
+
+            <div class="mb-3 rounded-3 border p-3" data-invoice-tasks
+                 data-fetch-url="{{ route('admin.projects.billable-tasks', ['project' => '__PROJECT__']) }}"
+                 data-invoice-id="{{ $invoice->exists ? $invoice->id : '' }}">
+                <label class="form-label mb-1">Tarefas do projeto (opcional)</label>
+                <p class="text-muted small mb-2">Ao escolher o projeto acima, as tarefas concluídas e ainda não faturadas são listadas aqui. As tarefas marcadas são vinculadas a esta fatura e não aparecem mais na seleção das próximas.</p>
+                <div data-invoice-tasks-list class="text-muted small">Escolha um projeto acima para listar as tarefas faturáveis.</div>
+                @error('task_ids')<div class="text-danger small mt-2">{{ $message }}</div>@enderror
+            </div>
+
             <div class="row">
                 <div class="col-md-3">
                     <div class="mb-3">

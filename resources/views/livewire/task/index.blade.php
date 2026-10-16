@@ -6,7 +6,15 @@
     <div class="card mb-3">
         <div class="card-body py-2">
             <div class="row g-2">
-                <div class="col-md-6"><input type="text" wire:model.live.debounce.300ms="search" placeholder="Buscar tarefas..." class="form-control form-control-sm"></div>
+                <div class="col-md-3"><input type="text" wire:model.live.debounce.300ms="search" placeholder="Buscar tarefas..." class="form-control form-control-sm"></div>
+                <div class="col-md-3">
+                    <select wire:model.live="deliverableFilter" class="form-select form-select-sm" aria-label="Filtrar por entrega">
+                        <option value="">Todas as entregas</option>
+                        @foreach($deliverables as $deliverable)
+                            <option value="{{ $deliverable->id }}">{{ $deliverable->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div class="col-md-3">
                     <select wire:model.live="statusFilter" class="form-select form-select-sm">
                         <option value="">Todos os status</option>
