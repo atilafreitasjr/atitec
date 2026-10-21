@@ -94,6 +94,7 @@ class PorcosCrioulosTasksSeeder extends Seeder
             ['Correção da listagem de animais (LEFT JOIN, FBB e categorias)', 6, 'Animais sem grupo voltaram a aparecer, limite do FBB ampliado e novas categorias nos selects.'],
             ['Correção de encoding UTF-8 do banco e dados corrompidos', 4, 'Conexão com utf8 e correção dos registros duplamente codificados.'],
             ['Limpeza de código morto, menus antigos e imagens sem uso', 4, 'Remoção de arquivos e imagens sem referência e de menus legados.'],
+            ['Remoção do módulo de Eventos (Kohana, TinyMCE e galeria)', 6, 'Exclusão do módulo legado de eventos (~2.600 arquivos: framework Kohana 3, editor TinyMCE, galeria com ~200 fotos, caches e logs de 2022–2024), ajuste no functions/Conexao.php e .gitignore (commits 530428a, c3dfb10, a76f8eb).'],
         ],
         'Testes e publicação' => [
             ['Testes de campo e publicação em homologação', 12, 'Validação das funcionalidades em ambiente de homologação e ajustes apontados.'],

@@ -37,7 +37,7 @@ return [
         'whatsapp' => ['label' => 'Integração com WhatsApp', 'hours' => 12],
         'pagamentos' => ['label' => 'Pagamentos online (PIX/cartão)', 'hours' => 16],
         'ia' => ['label' => 'Recursos de IA (chat/automações)', 'hours' => 40, 'monthly' => 250],
-        'app_mobile' => ['label' => 'Aplicativo mobile', 'hours' => 60],
+        'app_mobile' => ['label' => 'Aplicativo móvel (PWA – Progressive Web App)', 'hours' => 60],
         'integracoes' => ['label' => 'Integração com sistemas existentes (ERP/planilhas)', 'hours' => 40],
         'site' => ['label' => 'Site institucional junto do sistema', 'hours' => 26],
     ],
