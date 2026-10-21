@@ -9,9 +9,10 @@
         <p class="text-gray-400 mt-3">Escolha o canal ou envie a mensagem — respondemos rápido em horário comercial.</p>
         <ul class="space-y-3 mt-6">
             @foreach($channels as $c)
-            <li><a href="{{ $c->url ?? '#' }}" @if($c->url) target="_blank" @endif class="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3 hover:border-[#FFFF5D]/60"><span><strong>{{ $c->label }}:</strong> {{ $c->value }}</span><span class="text-[#FFFF5D]">→</span></a></li>
+            <li><a href="{{ $c->url ?? '#' }}" @if($c->url) target="_blank" rel="noopener noreferrer" @endif class="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3 hover:border-[#FFFF5D]/60"><span><strong>{{ $c->label }}:</strong> {{ $c->value }}</span><span class="text-[#FFFF5D]">→</span></a></li>
             @endforeach
         </ul>
+        <p class="mt-4 text-xs text-gray-500">{{ config('company.legal_name') }} · CNPJ {{ config('company.cnpj') }} · {{ config('company.address') }} — {{ config('company.neighborhood') }}, {{ config('company.city') }}/{{ config('company.state') }}</p>
     </div>
     <form method="POST" action="{{ route('site.contato.store') }}" class="bg-[#1A1D21] border border-white/10 rounded-2xl p-6 space-y-4">
         @csrf

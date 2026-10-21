@@ -153,7 +153,16 @@ class KanbanProjectIsolationTest extends TestCase
 
         $this->actingAs($admin)->get(route('admin.projects.kanban', $project))
             ->assertOk()
-            ->assertSeeInOrder(['Sem fase', 'Planejamento', 'Proposta Enviada', 'Aceito em Espera', 'Desenvolvimento', 'Concluído', 'Em Produção']);
+            ->assertSee('Sem fase')
+            ->assertSeeInOrder([
+                'Hierarquia das fases:',
+                '1. Planejamento',
+                '2. Proposta Enviada',
+                '3. Aceito em Espera',
+                '4. Desenvolvimento',
+                '5. Concluído',
+                '6. Em Produção',
+            ]);
 
         $board = fn () => Livewire::test(Board::class, ['projectId' => $project->id]);
 

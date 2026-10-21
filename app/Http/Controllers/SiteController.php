@@ -20,6 +20,7 @@ class SiteController extends Controller
         return view('site.home', [
             'featured' => Project::where('featured', true)->where('status', '!=', 'arquivado')->orderBy('sort_order')->take(6)->get(),
             'projects' => Project::where('status', '!=', 'arquivado')->orderBy('sort_order')->take(7)->get(),
+            'liveProjectCount' => Project::whereIn('status', ['entregue', 'suporte'])->count(),
             'channels' => Channel::where('active', true)->orderBy('sort_order')->get(),
         ]);
     }

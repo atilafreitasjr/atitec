@@ -16,9 +16,10 @@
             <div class="flex flex-wrap gap-3 mt-8">
                 <a href="{{ route('site.orcamento') }}" class="bg-[#FFFF5D] text-black font-semibold px-6 py-3 rounded-lg hover:bg-[#FFD400]">Solicitar orçamento</a>
                 <a href="{{ route('site.portfolio') }}" class="border border-white/20 px-6 py-3 rounded-lg hover:border-[#FFFF5D] hover:text-[#FFFF5D]">Ver portfólio</a>
+                <a href="{{ config('company.whatsapp') }}" target="_blank" rel="noopener noreferrer" class="border border-[#25D366]/50 text-[#25D366] px-6 py-3 rounded-lg hover:bg-[#25D366] hover:text-white transition">Falar no WhatsApp</a>
             </div>
             <dl class="grid grid-cols-3 gap-4 mt-10 text-center">
-                <div class="bg-white/5 border border-white/10 rounded-xl p-4"><dt class="text-2xl font-[Montserrat] font-extrabold text-[#FFFF5D]">7+</dt><dd class="text-xs text-gray-400 mt-1">sistemas em produção</dd></div>
+                <div class="bg-white/5 border border-white/10 rounded-xl p-4"><dt class="text-2xl font-[Montserrat] font-extrabold text-[#FFFF5D]">{{ $liveProjectCount }}+</dt><dd class="text-xs text-gray-400 mt-1">sistemas em produção</dd></div>
                 <div class="bg-white/5 border border-white/10 rounded-xl p-4"><dt class="text-2xl font-[Montserrat] font-extrabold text-[#FFFF5D]">3</dt><dd class="text-xs text-gray-400 mt-1">frentes: software, consultoria e automação</dd></div>
                 <div class="bg-white/5 border border-white/10 rounded-xl p-4"><dt class="text-2xl font-[Montserrat] font-extrabold text-[#FFFF5D]">100%</dt><dd class="text-xs text-gray-400 mt-1">código próprio e documentado</dd></div>
             </dl>

@@ -68,6 +68,37 @@ class AccessControlTest extends TestCase
         $this->assertTrue($user->active);
     }
 
+    public function test_move_usuario_entre_clientes_sem_conflito_de_email(): void
+    {
+        $this->actingAs($this->admin());
+
+        $oldClient = Client::create(['name' => 'Cliente antigo', 'email' => 'atila@teste.com']);
+        $newClient = Client::create(['name' => 'Empresa nova', 'email' => 'empresa@teste.com']);
+        $user = User::factory()->create([
+            'name' => 'Átila',
+            'email' => 'atila@teste.com',
+            'role' => 'cliente',
+            'active' => true,
+            'client_id' => $oldClient->id,
+        ]);
+        $oldClient->update(['user_id' => $user->id]);
+
+        $this->put(route('admin.users.update', $user), [
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => 'cliente',
+            'client_id' => $newClient->id,
+            'active' => '1',
+        ])->assertRedirect(route('admin.users.index'))->assertSessionHasNoErrors();
+
+        $this->assertSame($newClient->id, $user->fresh()->client_id);
+        $this->assertSame($user->id, $newClient->fresh()->user_id);
+        $this->assertNull($oldClient->fresh()->user_id);
+        // O novo cliente mantém o próprio cadastro; o vínculo é feito pelo user_id.
+        $this->assertSame('Empresa nova', $newClient->fresh()->name);
+        $this->assertSame('empresa@teste.com', $newClient->fresh()->email);
+    }
+
     public function test_nao_exclui_o_proprio_usuario(): void
     {
         $admin = $this->admin();

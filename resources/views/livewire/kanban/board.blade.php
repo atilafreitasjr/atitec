@@ -59,43 +59,94 @@
         </div>
     @endif
 
-    {{-- Colunas Kanban: fases do projeto --}}
+    {{-- Hierarquia das fases --}}
     @php
         $phaseColors = ['1' => 'secondary', '2' => 'info', '3' => 'warning', '4' => 'primary', '5' => 'success', '6' => 'dark'];
     @endphp
-    <div class="d-flex gap-3 overflow-auto pb-2">
+    <div class="d-flex flex-wrap align-items-center gap-1 mb-2">
+        <span class="text-muted small me-1"><i class="bi bi-diagram-3 me-1"></i>Hierarquia das fases:</span>
+        @foreach(\App\Models\DeliverableTask::PHASES as $phase => $label)
+            @php
+                $column = (string) $phase;
+                $count = $tasksByPhase[$column]->count();
+            @endphp
+            <span class="badge {{ $count > 0 ? 'text-bg-'.$phaseColors[$column] : 'bg-light text-muted border' }}" title="{{ $count }} tarefa(s) em {{ $label }}">
+                {{ $phase }}. {{ $label }} <span class="opacity-75">({{ $count }})</span>
+            </span>
+            @unless($loop->last)
+                <i class="bi bi-chevron-right text-muted" style="font-size:.65rem"></i>
+            @endunless
+        @endforeach
+    </div>
+
+    {{-- Colunas Kanban: fases do projeto (vazias ficam compactas) --}}
+    @once
+        <style>
+            .kanban-column { flex: 0 0 290px; width: 290px; }
+            .kanban-column.is-empty { flex-basis: 58px; width: 58px; }
+            .kanban-empty-header {
+                height: 100%;
+                min-height: 220px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: .5rem;
+                padding: .5rem .25rem;
+                background: var(--bs-tertiary-bg);
+                border-bottom: 0;
+            }
+            .kanban-column.is-empty .card { border-style: dashed; }
+            .kanban-empty-label {
+                writing-mode: vertical-rl;
+                transform: rotate(180deg);
+                text-transform: uppercase;
+                letter-spacing: .06em;
+                font-size: .7rem;
+                white-space: nowrap;
+            }
+        </style>
+    @endonce
+    <div class="d-flex gap-2 overflow-auto pb-2">
         @if($tasksByPhase['sem_fase']->isNotEmpty())
-            <div class="flex-shrink-0" style="width:290px">
+            <div class="kanban-column flex-shrink-0">
                 <div class="card h-100">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <strong class="small text-uppercase">Sem fase</strong>
                         <span class="badge bg-secondary">{{ $tasksByPhase['sem_fase']->count() }}</span>
                     </div>
                     <div class="card-body p-2" style="max-height:60vh;overflow-y:auto">
-                        @forelse($tasksByPhase['sem_fase'] as $task)
+                        @foreach($tasksByPhase['sem_fase'] as $task)
                             @include('livewire.kanban._card', ['task' => $task, 'column' => 'sem_fase', 'readonly' => $readonly])
-                        @empty
-                            <p class="text-center text-muted small py-4">Nenhuma tarefa</p>
-                        @endforelse
+                        @endforeach
                     </div>
                 </div>
             </div>
         @endif
         @foreach(\App\Models\DeliverableTask::PHASES as $phase => $label)
-            @php $column = (string) $phase; @endphp
-            <div class="flex-shrink-0" style="width:290px">
+            @php
+                $column = (string) $phase;
+                $isEmpty = $tasksByPhase[$column]->isEmpty();
+            @endphp
+            <div class="kanban-column flex-shrink-0 {{ $isEmpty ? 'is-empty' : '' }}">
                 <div class="card h-100">
-                    <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <strong class="small text-uppercase">{{ $label }}</strong>
-                        <span class="badge bg-{{ $phaseColors[$column] ?? 'secondary' }}">{{ $tasksByPhase[$column]->count() }}</span>
-                    </div>
-                    <div class="card-body p-2" style="max-height:60vh;overflow-y:auto">
-                        @forelse($tasksByPhase[$column] as $task)
-                            @include('livewire.kanban._card', ['task' => $task, 'column' => $column, 'readonly' => $readonly])
-                        @empty
-                            <p class="text-center text-muted small py-4">Nenhuma tarefa</p>
-                        @endforelse
-                    </div>
+                    @if($isEmpty)
+                        <div class="kanban-empty-header" title="Fase {{ $column }}: {{ $label }} — nenhuma tarefa">
+                            <span class="badge bg-{{ $phaseColors[$column] ?? 'secondary' }}">{{ $tasksByPhase[$column]->count() }}</span>
+                            <strong class="kanban-empty-label">{{ $label }}</strong>
+                            <span class="text-muted small">Fase {{ $column }}</span>
+                        </div>
+                    @else
+                        <div class="card-header d-flex justify-content-between align-items-center py-2">
+                            <strong class="small text-uppercase">{{ $label }}</strong>
+                            <span class="badge bg-{{ $phaseColors[$column] ?? 'secondary' }}">{{ $tasksByPhase[$column]->count() }}</span>
+                        </div>
+                        <div class="card-body p-2" style="max-height:60vh;overflow-y:auto">
+                            @foreach($tasksByPhase[$column] as $task)
+                                @include('livewire.kanban._card', ['task' => $task, 'column' => $column, 'readonly' => $readonly])
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
             </div>
         @endforeach

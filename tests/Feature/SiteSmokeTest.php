@@ -56,14 +56,14 @@ class SiteSmokeTest extends TestCase
         $lead = Lead::where('email', 'estimativa@teste.com')->firstOrFail();
         $estimate = $lead->requirements;
 
-        // 40 h (tipo) + 20 h (painel) + 12 h (WhatsApp) = 72 h × R$ 50 × 1,1 (prazo) = R$ 3.960
+        // 120 h (tipo) + 20 h (painel) + 12 h (WhatsApp) = 152 h × R$ 50 × 1,1 (prazo) = R$ 8.360
         // (o JSON do MariaDB normaliza números inteiros — daí a comparação exata)
-        $this->assertSame(72, $estimate['hours']);
-        $this->assertSame(3960, $estimate['development']);
-        $this->assertSame(2040, $estimate['setup']); // servidor R$ 2.000 + domínio R$ 40
+        $this->assertSame(152, $estimate['hours']);
+        $this->assertSame(8360, $estimate['development']);
+        $this->assertSame(2050, $estimate['setup']); // servidor R$ 2.000 + domínio R$ 50
         $this->assertSame(150, $estimate['monthly']); // servidor R$ 150/mês
-        $this->assertSame(6000, $estimate['total']);
-        $this->assertSame(['min' => 4800, 'max' => 7500], $estimate['range']);
+        $this->assertSame(10410, $estimate['total']);
+        $this->assertSame(['min' => 8300, 'max' => 13100], $estimate['range']);
 
         $admin = User::where('email', 'admin@atitec.com.br')->firstOrFail();
         $this->actingAs($admin)->get(route('admin.leads.show', $lead))

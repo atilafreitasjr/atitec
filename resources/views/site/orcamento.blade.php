@@ -6,6 +6,7 @@
     <p class="text-[#FFFF5D] font-semibold tracking-widest text-xs uppercase">Orçamento em 3 passos</p>
     <h1 class="font-[Montserrat] font-extrabold text-4xl mt-2">Descreva seu projeto</h1>
     <p class="text-gray-400 mt-3">1. Tipo de projeto → 2. Detalhes → 3. Seus contatos. Retornamos com proposta objetiva.</p>
+    <p class="mt-3 text-sm"><a class="text-[#FFFF5D] font-semibold hover:underline" href="{{ config('company.whatsapp') }}" target="_blank" rel="noopener noreferrer">Prefere conversar agora? Fale com a ATITEC no WhatsApp ({{ config('company.phone') }}) →</a></p>
     <form method="POST" action="{{ route('site.orcamento.store') }}"
           data-budget-estimator
           data-hourly-rate="{{ $orcamento['hourly_rate'] }}"

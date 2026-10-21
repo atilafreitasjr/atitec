@@ -89,6 +89,7 @@ class UserController extends Controller
 
         $oldClientId = $user->client_id;
         $clientId = $data['role'] === 'cliente' ? ($data['client_id'] ?? null) : null;
+        $movedToAnotherClient = $oldClientId && $clientId && (int) $oldClientId !== (int) $clientId;
 
         $user->update([
             'name' => $data['name'],
@@ -99,7 +100,7 @@ class UserController extends Controller
         ]);
 
         $this->syncClientLink($user, $oldClientId, $clientId);
-        if ($clientId) {
+        if ($clientId && ! $movedToAnotherClient) {
             Client::whereKey($clientId)->update(['name' => $user->name, 'email' => $user->email]);
         }
 
@@ -129,8 +130,13 @@ class UserController extends Controller
     private function validated(Request $request, ?User $user = null): array
     {
         $emailRules = ['required', 'email', 'max:160', Rule::unique('users', 'email')->ignore($user?->id)];
-        if ($request->filled('client_id') && $request->input('role') === 'cliente') {
-            $emailRules[] = Rule::unique('clients', 'email')->ignore($request->integer('client_id'));
+        $clientId = $request->integer('client_id') ?: null;
+        $movingToAnotherClient = $clientId && $user?->client_id && (int) $user->client_id !== $clientId;
+
+        // Ao trocar de empresa não copiamos o e-mail do usuário para o novo cliente,
+        // então o e-mail pode continuar existindo no cliente antigo.
+        if ($clientId && $request->input('role') === 'cliente' && ! $movingToAnotherClient) {
+            $emailRules[] = Rule::unique('clients', 'email')->ignore($clientId);
         }
 
         $data = $request->validate([
