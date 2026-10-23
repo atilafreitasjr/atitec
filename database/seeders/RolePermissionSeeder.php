@@ -26,6 +26,7 @@ class RolePermissionSeeder extends Seeder
         'invoice' => ['view', 'create', 'edit', 'delete'],
         'lead' => ['view', 'edit', 'delete'],
         'conversation' => ['view', 'create', 'edit', 'delete'],
+        'ai_support' => ['view', 'reply'],
         'channel' => ['view', 'create', 'edit', 'delete'],
         'user' => ['view', 'create', 'edit', 'delete'],
         'role' => ['view', 'create', 'edit', 'delete'],
@@ -36,7 +37,7 @@ class RolePermissionSeeder extends Seeder
         'admin' => ['*'],
         'gerente' => [
             'deliverable.*', 'task.*',
-            'client.*', 'project.*', 'lead.*', 'conversation.*',
+            'client.*', 'project.*', 'lead.*', 'conversation.*', 'ai_support.*',
             'invoice.view', 'invoice.create', 'invoice.edit',
             'channel.view',
         ],

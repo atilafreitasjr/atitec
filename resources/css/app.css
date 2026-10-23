@@ -129,3 +129,117 @@
     margin: 1.5rem 0;
     border-color: #e5e7eb;
 }
+
+/* Atendimento IA: markdown dentro das bolhas do chat */
+.atendimento-ia-prose > :first-child {
+    margin-top: 0;
+}
+
+.atendimento-ia-prose > :last-child {
+    margin-bottom: 0;
+}
+
+.atendimento-ia-prose p {
+    margin: 0 0 .55rem;
+}
+
+.atendimento-ia-prose strong {
+    font-weight: 700;
+    color: #ffff9d;
+}
+
+.atendimento-ia-prose a {
+    color: #ffff5d;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    overflow-wrap: anywhere;
+}
+
+.atendimento-ia-prose ul,
+.atendimento-ia-prose ol {
+    margin: .35rem 0 .6rem 1.15rem;
+}
+
+.atendimento-ia-prose ul {
+    list-style: disc;
+}
+
+.atendimento-ia-prose ol {
+    list-style: decimal;
+}
+
+.atendimento-ia-prose li {
+    margin: .18rem 0;
+}
+
+.atendimento-ia-prose h1,
+.atendimento-ia-prose h2,
+.atendimento-ia-prose h3 {
+    margin: .35rem 0;
+    font-weight: 700;
+    color: #fff;
+    font-size: .95rem;
+}
+
+.atendimento-ia-prose code {
+    border-radius: .25rem;
+    background: rgba(255, 255, 255, .08);
+    padding: .08rem .3rem;
+    font-size: .85em;
+}
+
+.atendimento-ia-prose blockquote {
+    margin: .4rem 0;
+    border-left: 2px solid #ffff5d;
+    padding-left: .6rem;
+    color: #cfd6c2;
+}
+
+[data-ia-panel]:not(.hidden) {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - 7rem);
+}
+
+[data-ia-messages] {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 7rem;
+    max-height: 21rem;
+    scrollbar-width: thin;
+    scrollbar-color: #3f3f46 transparent;
+}
+
+[data-ia-panel].ia-contact-open {
+    overflow-y: auto;
+}
+
+[data-ia-panel].ia-contact-open [data-ia-messages] {
+    max-height: 10rem;
+}
+
+/* Markdown na conversa do admin */
+.ia-admin-markdown > :first-child {
+    margin-top: 0;
+}
+
+.ia-admin-markdown > :last-child {
+    margin-bottom: 0;
+}
+
+.ia-admin-markdown p {
+    margin-bottom: .5rem;
+}
+
+.ia-admin-markdown ul,
+.ia-admin-markdown ol {
+    margin: .25rem 0 .5rem 1.1rem;
+}
+
+.ia-admin-markdown ul {
+    list-style: disc;
+}
+
+.ia-admin-markdown ol {
+    list-style: decimal;
+}

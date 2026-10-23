@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AtendimentoIaController as AdminAtendimentoIaController;
 use App\Http\Controllers\Admin\ChannelController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\ConversationController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\ProjectKanbanController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\AtendimentoIaController;
 use App\Http\Controllers\Cliente\PortalController;
 use App\Http\Controllers\DocsController;
 use App\Http\Controllers\ProfileController;
@@ -32,6 +34,17 @@ Route::get('/contato', [SiteController::class, 'contato'])->name('site.contato')
 Route::post('/contato', [SiteController::class, 'contatoStore'])->name('site.contato.store');
 Route::get('/orcamento', [SiteController::class, 'orcamento'])->name('site.orcamento');
 Route::post('/orcamento', [SiteController::class, 'orcamentoStore'])->name('site.orcamento.store');
+
+// ---- Atendimento público com IA (widget do site) ----
+Route::prefix('atendimento-ia')->name('atendimento-ia.')->group(function () {
+    Route::post('mensagem', [AtendimentoIaController::class, 'mensagem'])
+        ->middleware('throttle:30,1')->name('mensagem');
+    Route::post('contato', [AtendimentoIaController::class, 'contato'])
+        ->middleware('throttle:10,1')->name('contato');
+    Route::get('conversa/{token}', [AtendimentoIaController::class, 'conversa'])
+        ->where('token', '[A-Za-z0-9]{32,64}')
+        ->middleware('throttle:60,1')->name('conversa');
+});
 
 // ---- Cartão digital (apontar cartao.atitec.com.br para cá) ----
 Route::get('/cartao', [SiteController::class, 'cartao'])->name('site.cartao');
@@ -108,6 +121,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:ad
     Route::post('leads/{lead}/convert', [LeadController::class, 'convertToProject'])
         ->name('leads.convert')->middleware(['permission:lead.edit', 'permission:project.create']);
     $resource('channels', ChannelController::class, 'channel', ['index', 'store', 'update', 'destroy']);
+
+    // ---- Atendimento IA: dúvidas encaminhadas pelo assistente do site ----
+    Route::get('atendimento-ia', [AdminAtendimentoIaController::class, 'index'])
+        ->name('atendimento-ia.index')->middleware('permission:ai_support.view');
+    Route::get('atendimento-ia/{conversation}', [AdminAtendimentoIaController::class, 'show'])
+        ->name('atendimento-ia.show')->middleware('permission:ai_support.view');
+    Route::post('atendimento-ia/{conversation}/responder', [AdminAtendimentoIaController::class, 'reply'])
+        ->name('atendimento-ia.reply')->middleware('permission:ai_support.reply');
+    Route::post('atendimento-ia/{conversation}/status', [AdminAtendimentoIaController::class, 'status'])
+        ->name('atendimento-ia.status')->middleware('permission:ai_support.reply');
 
     // ---- Usuários e permissões (Spatie) ----
     $resource('users', UserController::class, 'user', ['index', 'create', 'store', 'edit', 'update', 'destroy']);

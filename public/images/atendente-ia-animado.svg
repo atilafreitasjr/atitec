@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="480" viewBox="0 0 420 480" fill="none" role="img" aria-labelledby="atitec-title atitec-desc">
+<title id="atitec-title">Atendente virtual da Atitec</title>
+<desc id="atitec-desc">Robô amigável em amarelo-lima e verde-claro, inspirado na identidade Atitec, com headset, olhos luminosos, sorriso e letra A no peito. Flutua, pisca e acena suavemente. Fundo transparente.</desc>
+<defs>
+ <linearGradient id="atitec-shell" x1="120" y1="90" x2="292" y2="298" gradientUnits="userSpaceOnUse"><stop stop-color="#FCFFF3"/><stop offset="0.65" stop-color="#F3FFDC"/><stop offset="1" stop-color="#CADAAD"/></linearGradient>
+ <linearGradient id="atitec-lime" x1="147" y1="289" x2="264" y2="413" gradientUnits="userSpaceOnUse"><stop stop-color="#FFFF9D"/><stop offset="0.55" stop-color="#FFFF5D"/><stop offset="1" stop-color="#DCDD38"/></linearGradient>
+ <linearGradient id="atitec-screen" x1="143" y1="158" x2="280" y2="254" gradientUnits="userSpaceOnUse"><stop stop-color="#29352E"/><stop offset="1" stop-color="#111B18"/></linearGradient>
+</defs>
+<style>
+.atitec-float{animation:atitec-float 4s ease-in-out infinite}
+.atitec-eye{transform-box:fill-box;transform-origin:center;animation:atitec-blink 5.8s ease-in-out infinite}
+.atitec-wave{transform-box:view-box;transform-origin:291px 319px;animation:atitec-wave 7s ease-in-out infinite}
+.atitec-status{animation:atitec-pulse 2.8s ease-in-out infinite}
+@keyframes atitec-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes atitec-blink{0%,40%,44%,100%{transform:scaleY(1)}42%{transform:scaleY(.08)}}
+@keyframes atitec-wave{0%,7%,30%,100%{transform:rotate(0deg)}12%,22%{transform:rotate(-13deg)}17%,27%{transform:rotate(7deg)}}
+@keyframes atitec-pulse{0%,100%{opacity:1}50%{opacity:.42}}
+@media (prefers-reduced-motion:reduce){.atitec-float,.atitec-eye,.atitec-wave,.atitec-status{animation:none!important}}
+</style>
+<g class="atitec-float">
+ <!-- Antena: o ponto de presença fica dentro da silhueta. -->
+ <path d="M210 109V77" stroke="#26342C" stroke-width="11" stroke-linecap="round"/>
+ <circle cx="210" cy="62" r="17" fill="#FFFF5D" stroke="#26342C" stroke-width="6"/>
+ <circle cx="205" cy="57" r="5" fill="#FCFFF3"/>
+ <!-- Pernas curtas e arredondadas. -->
+ <path d="M174 391V424M245 391V424" stroke="#26342C" stroke-width="22" stroke-linecap="round"/>
+ <rect x="145" y="412" width="55" height="29" rx="14.5" fill="#F3FFDC" stroke="#26342C" stroke-width="6"/>
+ <rect x="220" y="412" width="55" height="29" rx="14.5" fill="#F3FFDC" stroke="#26342C" stroke-width="6"/>
+ <!-- Braço em repouso. -->
+ <path d="M134 320C108 328 96 349 98 372" stroke="#26342C" stroke-width="22" stroke-linecap="round"/>
+ <path d="M134 320C108 328 96 349 98 372" stroke="#F3FFDC" stroke-width="11" stroke-linecap="round"/>
+ <rect x="81" y="365" width="35" height="43" rx="17.5" transform="rotate(-9 98 386)" fill="#FFFF5D" stroke="#26342C" stroke-width="6"/>
+ <!-- Aceno com pivô no ombro; a mão nunca sai do viewBox. -->
+ <g class="atitec-wave">
+  <path d="M289 320C323 330 335 303 335 283" stroke="#26342C" stroke-width="22" stroke-linecap="round"/>
+  <path d="M289 320C323 330 335 303 335 283" stroke="#F3FFDC" stroke-width="11" stroke-linecap="round"/>
+  <path d="M320 284L314 267Q311 258 318 256Q324 254 328 265L328 248Q328 239 334 239Q341 239 341 248V262L346 250Q350 242 356 246Q361 249 357 258L352 275Q349 293 336 296Q324 299 320 284Z" fill="#FFFF5D" stroke="#26342C" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M329 276Q336 269 343 275" stroke="#A2A62F" stroke-width="3.5" stroke-linecap="round"/>
+ </g>
+ <!-- Tronco triangular arredondado, uma referência à letra A. -->
+ <path d="M179 284Q210 275 242 284L283 362Q298 397 265 407H154Q122 397 136 362Z" fill="url(#atitec-lime)" stroke="#26342C" stroke-width="7" stroke-linejoin="round"/>
+ <path d="M167 299L147 346" stroke="#FFFFC4" stroke-width="6" stroke-linecap="round"/>
+ <rect x="168" y="308" width="84" height="74" rx="21" fill="#26342C"/>
+ <path d="M183 362L202 326H217L237 362H222L219 355H200L197 362H183ZM205 344H214L209.5 334L205 344Z" fill="#FFFF5D"/>
+ <rect x="180" y="389" width="13" height="4" rx="2" fill="#26342C" opacity=".45"/>
+ <rect x="199" y="389" width="22" height="4" rx="2" fill="#26342C" opacity=".45"/>
+ <rect x="227" y="389" width="13" height="4" rx="2" fill="#26342C" opacity=".45"/>
+ <!-- Headset externo. -->
+ <path d="M94 201V172C94 110 147 89 210 89C273 89 326 110 326 172V201" stroke="#26342C" stroke-width="11" stroke-linecap="round"/>
+ <path d="M109 141C126 110 164 101 210 101C255 101 294 111 311 141" stroke="#FFFF5D" stroke-width="6" stroke-linecap="round"/>
+ <rect x="76" y="167" width="34" height="71" rx="16" fill="#FFFF5D" stroke="#26342C" stroke-width="6"/>
+ <rect x="310" y="167" width="34" height="71" rx="16" fill="#FFFF5D" stroke="#26342C" stroke-width="6"/>
+ <path d="M87 184V219M333 184V219" stroke="#FFFFB7" stroke-width="4" stroke-linecap="round"/>
+ <!-- Cabeça / balão de conversa. -->
+ <path d="M159 112H261Q312 112 312 164V229Q312 274 266 281H234L215 296Q210 300 205 296L186 281H158Q108 281 108 231V164Q108 112 159 112Z" fill="url(#atitec-shell)" stroke="#26342C" stroke-width="7" stroke-linejoin="round"/>
+ <path d="M134 145Q143 131 164 132H194" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity=".85"/>
+ <rect x="126" y="150" width="168" height="106" rx="38" fill="url(#atitec-screen)" stroke="#C9D6B5" stroke-width="3"/>
+ <path d="M145 166Q153 160 166 160H250" stroke="#667668" stroke-width="3" stroke-linecap="round" opacity=".55"/>
+ <!-- Expressão legível mesmo em tamanho de botão. -->
+ <g class="atitec-eye"><rect x="154" y="181" width="26" height="34" rx="13" fill="#FFFF5D"/><circle cx="162" cy="189" r="4" fill="#FCFFF3"/></g>
+ <g class="atitec-eye"><rect x="240" y="181" width="26" height="34" rx="13" fill="#FFFF5D"/><circle cx="248" cy="189" r="4" fill="#FCFFF3"/></g>
+ <path d="M192 222Q210 240 228 222" stroke="#F3FFDC" stroke-width="6" stroke-linecap="round"/>
+ <path d="M145 221H153M267 221H275" stroke="#FFFF5D" stroke-width="4" stroke-linecap="round" opacity=".35"/>
+ <!-- Microfone de atendimento, sem cobrir a expressão. -->
+ <path d="M327 227V247Q327 267 304 267H281" stroke="#26342C" stroke-width="7" stroke-linecap="round"/>
+ <rect x="263" y="260" width="25" height="14" rx="7" fill="#26342C"/>
+ <circle class="atitec-status" cx="272" cy="267" r="3" fill="#FFFF5D"/>
+</g>
+</svg>

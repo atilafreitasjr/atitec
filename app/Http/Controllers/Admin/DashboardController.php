@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AiConversation;
 use App\Models\Client;
 use App\Models\Conversation;
 use App\Models\DeliverableTask;
@@ -37,6 +38,7 @@ class DashboardController extends Controller
             'latestInvoices' => Invoice::with(['client', 'payments'])->latest()->take(6)->get(),
             'latestLeads' => Lead::with('client')->latest()->take(6)->get(),
             'activeClients' => Client::where('active', true)->count(),
+            'aiPending' => AiConversation::where('status', 'encaminhado')->count(),
         ]);
     }
 }

@@ -13,6 +13,7 @@ class PermissionLabels
         'invoice' => 'Faturas e cobranças',
         'lead' => 'Leads / Orçamentos',
         'conversation' => 'Mensagens',
+        'ai_support' => 'Atendimento IA',
         'channel' => 'Canais de contato',
         'user' => 'Usuários',
         'role' => 'Papéis e permissões',
@@ -23,6 +24,7 @@ class PermissionLabels
         'view' => 'Ver',
         'create' => 'Criar',
         'edit' => 'Editar',
+        'reply' => 'Responder',
         'delete' => 'Excluir',
     ];
 

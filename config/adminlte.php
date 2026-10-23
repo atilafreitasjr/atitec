@@ -247,6 +247,7 @@ return [
 
         ['header' => 'COMUNICAÇÃO'],
         ['text' => 'Mensagens', 'route' => 'admin.conversations.index', 'icon' => 'bi bi-chat-dots', 'can' => 'conversation.view'],
+        ['text' => 'Atendimento IA', 'route' => 'admin.atendimento-ia.index', 'icon' => 'bi bi-robot', 'can' => 'ai_support.view'],
         ['text' => 'Canais de contato', 'route' => 'admin.channels.index', 'icon' => 'bi bi-megaphone', 'can' => 'channel.view'],
 
         ['header' => 'ACESSO'],

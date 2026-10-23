@@ -13,6 +13,19 @@
 @stop
 
 @section('content')
+    @can('ai_support.view')
+        @if($aiPending > 0)
+            <div class="alert alert-warning d-flex flex-wrap align-items-center gap-3">
+                <i class="bi bi-robot fs-4"></i>
+                <div class="flex-grow-1">
+                    <strong>{{ $aiPending }} dúvida(s) encaminhada(s) pela IA</strong> aguardando atendimento humano.
+                    <span class="d-block small">O assistente do site registrou perguntas que precisam de uma decisão da equipe.</span>
+                </div>
+                <a href="{{ route('admin.atendimento-ia.index') }}" class="btn btn-sm btn-warning">Atender agora</a>
+            </div>
+        @endif
+    @endcan
+
     <div class="row g-3 mb-3">
         <div class="col-sm-6 col-xl-3"><div class="info-box"><span class="info-box-icon text-bg-primary"><i class="bi bi-kanban"></i></span><div class="info-box-content"><span class="info-box-text">Projetos ativos</span><span class="info-box-number">{{ $activeProjects }}</span><a href="{{ route('admin.projects.index') }}" class="small">Abrir projetos →</a></div></div></div>
         <div class="col-sm-6 col-xl-3"><div class="info-box"><span class="info-box-icon text-bg-warning"><i class="bi bi-cash-stack"></i></span><div class="info-box-content"><span class="info-box-text">Saldo a receber</span><span class="info-box-number">R$ {{ number_format($openBalance, 2, ',', '.') }}</span><a href="{{ route('admin.invoices.index') }}" class="small">Ver cobranças →</a></div></div></div>

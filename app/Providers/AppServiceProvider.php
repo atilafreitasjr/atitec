@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\AiConversation;
 use App\Support\PasswordPolicy;
 use ColorlibHQ\AdminLte\AdminLte;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -45,10 +47,27 @@ class AppServiceProvider extends ServiceProvider
         ];
 
         View::composer('adminlte::page', function () use ($adminMenu, $adminDocsUrl, $clientMenu) {
-            $isClient = auth()->user()?->role === 'cliente';
+            $user = auth()->user();
+            $isClient = $user?->role === 'cliente';
+            $menu = $isClient ? $clientMenu : $adminMenu;
+
+            // Badge de dúvidas da IA aguardando atendimento humano.
+            if (! $isClient
+                && $user?->can('ai_support.view')
+                && Schema::hasTable('ai_conversations')
+                && ($pending = AiConversation::where('status', 'encaminhado')->count()) > 0) {
+                $menu = collect($menu)->map(function (array $item) use ($pending) {
+                    if (($item['route'] ?? null) === 'admin.atendimento-ia.index') {
+                        $item['label'] = $pending;
+                        $item['label_color'] = 'danger';
+                    }
+
+                    return $item;
+                })->all();
+            }
 
             config([
-                'adminlte.menu' => $isClient ? $clientMenu : $adminMenu,
+                'adminlte.menu' => $menu,
                 'adminlte.sidebar_docs_url' => $isClient ? '/cliente/ajuda' : $adminDocsUrl,
             ]);
 
