@@ -198,7 +198,8 @@
 [data-ia-panel]:not(.hidden) {
     display: flex;
     flex-direction: column;
-    max-height: calc(100dvh - 7rem);
+    max-height: calc(100dvh - 13rem);
+    overflow-y: auto;
 }
 
 [data-ia-messages] {

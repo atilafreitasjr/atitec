@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Client;
 use App\Models\Lead;
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -24,6 +25,38 @@ class SiteSmokeTest extends TestCase
         $this->get('/')->assertSee('Agricultura Familiar');
         $this->get('/cartao')->assertSee('Átila de Freitas Jr')->assertSee('Agricultura Familiar');
         $this->get('/cartao/vcard')->assertOk()->assertDownload('atila-de-freitas-jr.vcf');
+    }
+
+    public function test_home_usa_o_novo_layout_com_portfolio_do_banco(): void
+    {
+        $this->seed();
+
+        $project = Project::where('slug', 'agricultura-familiar')->firstOrFail();
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('atitec/assets/css/style.css', false)
+            ->assertSee('Tecnologia')
+            ->assertSee('data-category="agro"', false)
+            ->assertSee(route('site.case', $project->slug), false)
+            ->assertSee('data-atendimento-ia', false);
+    }
+
+    public function test_home_preserva_links_de_autenticacao(): void
+    {
+        $this->seed();
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Área do cliente')
+            ->assertSee('Criar conta');
+
+        $admin = User::where('email', 'admin@atitec.com.br')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->get('/')
+            ->assertOk()
+            ->assertSee('Minha área');
     }
 
     public function test_orcamento_cria_lead(): void
