@@ -16,7 +16,11 @@ class DocsTest extends TestCase
         $this->get('/docs')
             ->assertOk()
             ->assertSee('Guia do Cliente')
-            ->assertSee('Visão geral');
+            ->assertSee('Visão geral')
+            ->assertSee('data-bs-theme="dark"', false)
+            ->assertSee('color: var(--atitec-text)', false)
+            ->assertSee('Segurança:')
+            ->assertSee('cada cliente acessa somente');
 
         $this->get('/docs/acesso')->assertOk()->assertSee('Acesso e cadastro');
         $this->get('/docs/financeiro')->assertOk()->assertSee('Financeiro e cobranças');

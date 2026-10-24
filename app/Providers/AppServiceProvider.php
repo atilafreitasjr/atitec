@@ -46,7 +46,7 @@ class AppServiceProvider extends ServiceProvider
             ['text' => 'Ver site', 'url' => '/', 'icon' => 'bi bi-globe', 'target' => '_blank'],
         ];
 
-        View::composer('adminlte::page', function () use ($adminMenu, $adminDocsUrl, $clientMenu) {
+        View::composer('adminlte::page', function ($view) use ($adminMenu, $adminDocsUrl, $clientMenu) {
             $user = auth()->user();
             $isClient = $user?->role === 'cliente';
             $menu = $isClient ? $clientMenu : $adminMenu;
@@ -70,6 +70,11 @@ class AppServiceProvider extends ServiceProvider
                 'adminlte.menu' => $menu,
                 'adminlte.sidebar_docs_url' => $isClient ? '/cliente/ajuda' : $adminDocsUrl,
             ]);
+
+            // O admin e o workspace do cliente usam o tema escuro fixo.
+            // Sem data-bs-theme, variáveis dinâmicas do Bootstrap (ex.: texto
+            // secundário) seguem o tema claro do celular e ficam ilegíveis.
+            $view->with('darkMode', true);
 
             // O construtor do menu é singleton; descarta a instância resolvida
             // para que cada render use o menu do papel atual.

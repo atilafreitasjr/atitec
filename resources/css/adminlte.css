@@ -16,8 +16,13 @@
     --atitec-panel: #151619;
     --atitec-panel-raised: #1c1d20;
     --atitec-border: #303136;
+    /* Tema escuro fixo: evita que o navegador aplique cores de tema claro
+       do sistema a componentes que usam variáveis dinâmicas do Bootstrap. */
+    color-scheme: dark;
     --atitec-text: #f3ffdc;
     --atitec-muted: #aeb2a4;
+    --bs-secondary-color: var(--atitec-muted);
+    --bs-secondary-color-rgb: 174, 178, 164;
     --atitec-yellow: #ffff5d;
     --atitec-yellow-dark: #e4e400;
     --bs-primary: var(--atitec-yellow);

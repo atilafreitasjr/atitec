@@ -19,8 +19,9 @@
             overflow: auto; margin-bottom: 1rem; color: #f3ffdc; }
         .adminlte-docs pre code { background: none; padding: 0; }
         .adminlte-docs blockquote {
-            border-left: 4px solid var(--bs-primary); padding: .25rem 0 .25rem 1rem;
-            color: var(--bs-secondary-color); margin: 0 0 1rem; }
+            border-left: 4px solid var(--bs-primary); padding: .5rem 1rem;
+            background: rgba(255, 255, 93, .05); border-radius: .35rem;
+            color: var(--atitec-text); margin: 0 0 1rem; }
         .adminlte-docs img { max-width: 100%; }
     </style>
 @endpush
