@@ -11,7 +11,7 @@
 - Frontend: build do Vite QUEBRA no servidor (panic do rolldown) — sempre `npm run build` LOCAL + `rsync public/build/` para `~/domains/atitec.com.br/public_html/build/`.
 - Subdomínio `cartao.atitec.com.br`: criar no hPanel e apontar/symlink para o mesmo `public` (a rota `/` do subdomínio abre o cartão via `Route::domain`).
 - **Subdomínio `adocao.atitec.com.br` (app Laravel separado, NÃO mexer)**: núcleo em `~/domains/adocao.atitec.com.br` (fora do docroot do atitec; banco `u447523265_adoca`); entrada web em `~/domains/atitec.com.br/public_html/adocao/` com `index.php` que dá boot no app externo via `usePublicPath(__DIR__)` + `.htaccess` padrão + symlinks `build/` e `storage/`. NUNCA apagar `public/adocao_sis/`/`public_html/adocao/` nem rodar `git clean` no deploy do site (a entrada é untracked e vital para o subdomínio).
-- PHP web >= 8.3 no hPanel (Laravel 13). Forçar HTTPS no hPanel.
+- PHP web >= 8.4 no hPanel (Laravel 13). Forçar HTTPS no hPanel.
 - Laravel 13 + Laravel Sail (Docker). PHP 8.3+, MariaDB 11, Redis, phpMyAdmin.
 - Subir: `docker compose up -d` (na raiz do projeto).
 - Comandos Artisan **dentro do container como usuário `sail`** (evita arquivos owned by root):
