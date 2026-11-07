@@ -1,3 +1,6 @@
+# Hostinger: o Laravel 13 exige PHP 8.4 ou superior.
+AddHandler application/x-httpd-ea-php84___lsphp .php .php8 .phtml
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
