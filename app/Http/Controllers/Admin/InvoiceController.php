@@ -376,11 +376,12 @@ class InvoiceController extends Controller
         ]);
 
         if (! empty($data['project_id'])) {
-            $projectClientId = Project::whereKey($data['project_id'])->value('client_id');
+            $project = Project::findOrFail($data['project_id']);
+            $projectHasClients = $project->client_id || $project->clients()->exists();
 
-            if ($projectClientId && (int) $projectClientId !== (int) $data['client_id']) {
+            if ($projectHasClients && ! $project->hasClient((int) $data['client_id'])) {
                 throw ValidationException::withMessages([
-                    'project_id' => 'O cliente da fatura precisa ser o mesmo cliente vinculado ao projeto.',
+                    'project_id' => 'O cliente da fatura precisa estar vinculado ao projeto.',
                 ]);
             }
         }

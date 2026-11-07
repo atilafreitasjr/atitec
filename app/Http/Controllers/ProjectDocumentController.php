@@ -52,7 +52,7 @@ class ProjectDocumentController extends Controller
 
         $user = $request->user();
         $isStaff = in_array($user->role, ['admin', 'gerente', 'financeiro'], true) && $user->can('project.view');
-        $ownsProject = $user->client_id !== null && $user->client_id === $project->client_id;
+        $ownsProject = $user->client_id !== null && $project->hasClient((int) $user->client_id);
 
         abort_unless($isStaff || ($ownsProject && $document->visible_to_client), 404);
         abort_unless(Storage::disk('local')->exists($document->path), 404);

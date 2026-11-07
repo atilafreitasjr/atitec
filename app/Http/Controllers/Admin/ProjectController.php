@@ -8,6 +8,7 @@ use App\Models\DeliverableTask;
 use App\Models\Project;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -16,7 +17,7 @@ class ProjectController extends Controller
     public function index(): View
     {
         return view('admin.projects.index', [
-            'projects' => Project::with('client')->withCount(['deliverables', 'invoices'])->orderBy('sort_order')->paginate(15),
+            'projects' => Project::with('clients')->withCount(['deliverables', 'invoices'])->orderBy('sort_order')->paginate(15),
         ]);
     }
 
@@ -32,9 +33,13 @@ class ProjectController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validated($request);
+        $clientIds = $this->clientIds($data);
         $data['slug'] = Str::slug($data['slug'] ?: $data['title']);
 
-        Project::create($data);
+        DB::transaction(function () use ($data, $clientIds) {
+            $project = Project::create($data);
+            $project->clients()->sync($clientIds);
+        });
 
         return redirect()->route('admin.projects.index')->with('success', 'Projeto criado.');
     }
@@ -54,7 +59,7 @@ class ProjectController extends Controller
             ->values();
 
         return view('admin.projects.show', [
-            'project' => $project->load(['client', 'tasks', 'invoices', 'deliverables.tasks.invoice', 'documents.uploader']),
+            'project' => $project->load(['client', 'clients', 'tasks', 'invoices', 'deliverables.tasks.invoice', 'documents.uploader']),
             'billableTasks' => $billableTasks,
         ]);
     }
@@ -62,7 +67,7 @@ class ProjectController extends Controller
     public function edit(Project $project): View
     {
         return view('admin.projects.form', [
-            'project' => $project,
+            'project' => $project->load('clients'),
             'clients' => Client::orderBy('name')->get(),
             'statuses' => Project::STATUSES,
         ]);
@@ -71,9 +76,13 @@ class ProjectController extends Controller
     public function update(Request $request, Project $project): RedirectResponse
     {
         $data = $this->validated($request, $project->id);
+        $clientIds = $this->clientIds($data);
         $data['slug'] = Str::slug($data['slug'] ?: $data['title']);
 
-        $project->update($data);
+        DB::transaction(function () use ($project, $data, $clientIds) {
+            $project->update($data);
+            $project->clients()->sync($clientIds);
+        });
 
         return redirect()->route('admin.projects.index')->with('success', 'Projeto atualizado.');
     }
@@ -95,6 +104,8 @@ class ProjectController extends Controller
     {
         return $request->validate([
             'client_id' => ['nullable', 'exists:clients,id'],
+            'client_ids' => ['sometimes', 'array'],
+            'client_ids.*' => ['integer', 'distinct', 'exists:clients,id'],
             'title' => ['required', 'string', 'max:160'],
             'slug' => ['nullable', 'string', 'max:180', 'unique:projects,slug,'.$ignoreId],
             'description' => ['required', 'string'],
@@ -112,5 +123,22 @@ class ProjectController extends Controller
             'featured' => ['sometimes', 'boolean'],
             'sort_order' => ['required', 'integer', 'min:0'],
         ]);
+    }
+
+    private function clientIds(array &$data): array
+    {
+        $clientIds = collect([
+            $data['client_id'] ?? null,
+            ...($data['client_ids'] ?? []),
+        ])
+            ->filter()
+            ->map(fn ($clientId) => (int) $clientId)
+            ->unique()
+            ->values();
+
+        $data['client_id'] ??= $clientIds->first();
+        unset($data['client_ids']);
+
+        return $clientIds->all();
     }
 }

@@ -115,7 +115,12 @@ class PorcosCrioulosTasksSeeder extends Seeder
         }
 
         if (! $project->client_id) {
-            $project->update(['client_id' => Client::where('company', 'CR Agro')->value('id')]);
+            $clientId = Client::where('company', 'CR Agro')->value('id');
+            $project->update(['client_id' => $clientId]);
+
+            if ($clientId) {
+                $project->clients()->syncWithoutDetaching([$clientId]);
+            }
         }
 
         $tasks = 0;

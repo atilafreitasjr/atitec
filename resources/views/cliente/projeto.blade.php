@@ -78,6 +78,8 @@
                                     <td>
                                         @if($task->invoice)
                                             <a href="{{ route('cliente.fatura', $task->invoice) }}">{{ $task->invoice->status === 'pago' ? 'Paga' : 'Fatura #'.$task->invoice->id }}</a>
+                                        @elseif($task->invoice_id)
+                                            <span class="text-muted">Faturada</span>
                                         @elseif($task->cost_actual > 0)
                                             <span class="text-muted">Ainda não faturada</span>
                                         @else

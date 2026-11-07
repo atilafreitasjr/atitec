@@ -44,7 +44,7 @@
         <div class="col-xl-4"><x-adminlte-card title="Projetos recentes" icon="bi bi-kanban">
             <div class="list-group list-group-flush">
                 @forelse($latestProjects as $project)
-                    <a href="{{ route('admin.projects.show', $project) }}" class="list-group-item list-group-item-action px-0"><div class="d-flex justify-content-between gap-2"><span class="fw-semibold">{{ $project->title }}</span><span class="badge text-bg-secondary">{{ \App\Models\Project::STATUSES[$project->status] ?? ucfirst($project->status) }}</span></div><small class="text-muted">{{ $project->client?->name ?? 'Sem cliente vinculado' }} · {{ $project->progress }}% concluído</small></a>
+                    <a href="{{ route('admin.projects.show', $project) }}" class="list-group-item list-group-item-action px-0"><div class="d-flex justify-content-between gap-2"><span class="fw-semibold">{{ $project->title }}</span><span class="badge text-bg-secondary">{{ \App\Models\Project::STATUSES[$project->status] ?? ucfirst($project->status) }}</span></div><small class="text-muted">{{ $project->clients->pluck('name')->join(', ') ?: 'Sem cliente vinculado' }} · {{ $project->progress }}% concluído</small></a>
                 @empty <p class="text-muted mb-0">Nenhum projeto cadastrado.</p> @endforelse
             </div>
         </x-adminlte-card></div>

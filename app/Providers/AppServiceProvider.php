@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\AiConversation;
 use App\Support\PasswordPolicy;
 use ColorlibHQ\AdminLte\AdminLte;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -26,6 +27,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Password::defaults(fn () => PasswordPolicy::rule());
+        Paginator::defaultView('vendor.pagination.atitec');
+        Paginator::defaultSimpleView('vendor.pagination.atitec');
 
         // No workspace do cliente o AdminLTE usa o menu do portal; nas páginas
         // admin o menu padrão (config/adminlte.php) é mantido, filtrado pelas

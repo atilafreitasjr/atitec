@@ -185,6 +185,8 @@ class AtitecProjectSeeder extends Seeder
             $project->update($projectData);
         }
 
+        $project->clients()->syncWithoutDetaching([$client->id]);
+
         $sentinel = array_key_first(self::DELIVERABLES);
 
         if (Deliverable::where('project_id', $project->id)->where('name', $sentinel)->exists()) {

@@ -16,8 +16,8 @@ trait ScopedToProject
 
         $user = auth()->user();
 
-        // Cliente só enxerga os projetos do próprio cadastro.
-        if ($user && $user->role === 'cliente' && $project->client_id !== $user->client_id) {
+        // Clientes vinculados ao projeto podem acompanhar o mesmo workspace.
+        if ($user && $user->role === 'cliente' && ! $project->hasClient((int) $user->client_id)) {
             abort(403, 'Acesso não autorizado a este projeto.');
         }
 

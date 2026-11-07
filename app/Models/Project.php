@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Project extends Model
@@ -33,9 +34,29 @@ class Project extends Model
         'arquivado' => 'Arquivado',
     ];
 
+    protected static function booted(): void
+    {
+        static::created(function (Project $project): void {
+            if ($project->client_id) {
+                $project->clients()->syncWithoutDetaching([$project->client_id]);
+            }
+        });
+    }
+
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function clients(): BelongsToMany
+    {
+        return $this->belongsToMany(Client::class);
+    }
+
+    public function hasClient(int $clientId): bool
+    {
+        return (int) $this->client_id === $clientId
+            || $this->clients()->whereKey($clientId)->exists();
     }
 
     public function tasks(): HasMany

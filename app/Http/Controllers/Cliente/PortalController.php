@@ -48,7 +48,10 @@ class PortalController extends Controller
         abort_unless($client, 404);
 
         $project = $client->projects()
-            ->with(['deliverables.tasks.invoice', 'invoices.payments'])
+            ->with([
+                'deliverables.tasks.invoice' => fn ($query) => $query->where('client_id', $client->id),
+                'invoices' => fn ($query) => $query->where('client_id', $client->id)->with('payments'),
+            ])
             ->with(['documents' => fn ($query) => $query->where('visible_to_client', true)])
             ->findOrFail($id);
 

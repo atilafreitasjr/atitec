@@ -34,7 +34,7 @@ class DashboardController extends Controller
                 ->sum(DB::raw('COALESCE(hours_actual, 0) * COALESCE(hourly_rate, 0)')),
             'unlinkedLeads' => Lead::whereNull('client_id')->whereNotIn('status', ['fechado', 'perdido'])->count(),
             'proposalsWaiting' => Lead::where('proposal_status', 'enviada')->count(),
-            'latestProjects' => Project::with('client')->latest()->take(6)->get(),
+            'latestProjects' => Project::with('clients')->latest()->take(6)->get(),
             'latestInvoices' => Invoice::with(['client', 'payments'])->latest()->take(6)->get(),
             'latestLeads' => Lead::with('client')->latest()->take(6)->get(),
             'activeClients' => Client::where('active', true)->count(),

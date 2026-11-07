@@ -7,17 +7,47 @@
 @stop
 
 @section('content')
+    @php
+        $primaryClientId = (int) old('client_id', $project->client_id);
+        $associatedClientIds = $project->exists
+            ? $project->clients->pluck('id')->map(fn ($id) => (int) $id)->all()
+            : [];
+        if ($project->client_id) {
+            $associatedClientIds[] = (int) $project->client_id;
+        }
+        $selectedClientIds = old('client_ids', $associatedClientIds);
+        $selectedClientIds = is_array($selectedClientIds) ? array_map('intval', $selectedClientIds) : [];
+        if ($primaryClientId) {
+            $selectedClientIds[] = $primaryClientId;
+        }
+        $selectedClientIds = array_values(array_unique($selectedClientIds));
+    @endphp
+
+    @if($errors->any())<x-adminlte-alert theme="danger" title="Verifique os dados">{{ $errors->first() }}</x-adminlte-alert>@endif
+
     <x-adminlte-card>
         <form method="POST" action="{{ $project->exists ? route('admin.projects.update', $project) : route('admin.projects.store') }}">
             @csrf
             @if($project->exists)@method('PUT')@endif
             <div class="row">
                 <div class="col-md-6"><x-adminlte-input name="title" label="Título" :value="old('title', $project->title)" required/></div>
-                <div class="col-md-3"><x-adminlte-input name="slug" label="Slug (vazio = automático)" :value="old('slug', $project->slug)"/></div>
-                <div class="col-md-3"><x-adminlte-select name="client_id" label="Cliente">
+                <div class="col-md-6"><x-adminlte-input name="slug" label="Slug (vazio = automático)" :value="old('slug', $project->slug)"/></div>
+            </div>
+            <div class="row">
+                <div class="col-md-4"><x-adminlte-select name="client_id" label="Cliente principal (padrão das cobranças)">
                     <option value="">—</option>
-                    @foreach($clients as $c)<option value="{{ $c->id }}" @selected(old('client_id', $project->client_id) == $c->id)>{{ $c->name }}</option>@endforeach
+                    @foreach($clients as $c)<option value="{{ $c->id }}" @selected($primaryClientId === (int) $c->id)>{{ $c->name }}</option>@endforeach
                 </x-adminlte-select></div>
+                <div class="col-md-8 mb-3">
+                    <label for="client_ids" class="form-label">Clientes com acesso ao projeto</label>
+                    <select id="client_ids" name="client_ids[]" class="form-select @error('client_ids') is-invalid @enderror" multiple size="5" aria-describedby="clients-help">
+                        @foreach($clients as $c)
+                            <option value="{{ $c->id }}" @selected(in_array((int) $c->id, $selectedClientIds, true))>{{ $c->name }}</option>
+                        @endforeach
+                    </select>
+                    <div id="clients-help" class="form-text">Selecione todos os clientes que poderão acessar o projeto no portal. Use Ctrl (Windows/Linux) ou Command (Mac) para selecionar vários. O cliente principal sempre terá acesso e será o padrão das cobranças; se ficar em branco, o primeiro cliente selecionado será usado como principal.</div>
+                    @error('client_ids')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                </div>
             </div>
             <x-adminlte-textarea name="description" label="Descrição (site)" rows="3">{{ old('description', $project->description) }}</x-adminlte-textarea>
             <div class="row">

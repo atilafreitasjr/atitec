@@ -34,7 +34,14 @@
         <div class="col-lg-5">
             <x-adminlte-card title="Dados do projeto" icon="bi bi-info-circle">
                 <dl class="row mb-0">
-                    <dt class="col-sm-4">Cliente</dt><dd class="col-sm-8">{{ $project->client?->name ?? '—' }}</dd>
+                    <dt class="col-sm-4">Clientes</dt>
+                    <dd class="col-sm-8">
+                        @forelse($project->clients as $client)
+                            <span class="badge text-bg-secondary me-1 mb-1">{{ $client->name }}{{ (int) $client->id === (int) $project->client_id ? ' · principal' : '' }}</span>
+                        @empty
+                            —
+                        @endforelse
+                    </dd>
                     <dt class="col-sm-4">Status</dt><dd class="col-sm-8">{{ \App\Models\Project::STATUSES[$project->status] ?? ucfirst($project->status) }} · {{ $project->progress }}%</dd>
                     <dt class="col-sm-4">Prazo</dt><dd class="col-sm-8">{{ $project->deadline?->format('d/m/Y') ?? '—' }}</dd>
                     <dt class="col-sm-4">Orçamento</dt><dd class="col-sm-8">{{ $project->budget ? 'R$ '.number_format((float) $project->budget, 2, ',', '.') : '—' }}</dd>

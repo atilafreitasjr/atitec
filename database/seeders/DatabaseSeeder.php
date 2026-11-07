@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             ChannelSeeder::class,
             ProjectSeeder::class,
             AtitecProjectSeeder::class,
+            AtitecRecentTasksSeeder::class,
             RolePermissionSeeder::class,
             // KanbanImportSeeder é one-shot (requer staging import_* do agricultura_familiar).
         ]);
