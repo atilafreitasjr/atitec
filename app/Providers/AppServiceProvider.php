@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\AiConversation;
 use App\Support\PasswordPolicy;
+use App\Support\Theme;
 use ColorlibHQ\AdminLte\AdminLte;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Schema;
@@ -52,7 +53,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer('adminlte::page', function ($view) use ($adminMenu, $adminDocsUrl, $clientMenu) {
             $user = auth()->user();
             $isClient = $user?->role === 'cliente';
-            $isLightTheme = $user?->theme === 'light';
+            $isLightTheme = Theme::isLight();
             $menu = $isClient ? $clientMenu : $adminMenu;
 
             // Badge de dúvidas da IA aguardando atendimento humano.

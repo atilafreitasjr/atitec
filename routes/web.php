@@ -19,6 +19,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectDocumentController;
 use App\Http\Controllers\SiteController;
 use App\Models\DeliverableTask;
+use App\Support\Theme;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -76,17 +77,18 @@ Route::get('/dashboard', function () {
     return redirect()->route('cliente.dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+// ---- Tema claro/escuro: visitantes usam sessão/cookie; usuários também salvam no cadastro ----
+Route::post('/theme', function (Request $request) {
+    $data = $request->validate([
+        'theme' => ['required', 'in:dark,light'],
+    ]);
+
+    Theme::persist($request, $data['theme']);
+
+    return back();
+})->name('theme.update');
+
 Route::middleware('auth')->group(function () {
-    Route::post('/theme', function (Request $request) {
-        $data = $request->validate([
-            'theme' => ['required', 'in:dark,light'],
-        ]);
-
-        $request->user()->forceFill(['theme' => $data['theme']])->save();
-
-        return back();
-    })->name('theme.update');
-
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

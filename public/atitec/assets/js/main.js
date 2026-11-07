@@ -107,6 +107,11 @@
   const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
+  // Cores exatas de cada entrega: amarelo no tema escuro e oliva no claro.
+  const lightTheme = document.documentElement.getAttribute('data-theme') === 'light';
+  const networkPalette = lightTheme
+    ? { line: '99,119,42', signal: '116,139,28', node: '105,128,44', nodeAlpha: '.52' }
+    : { line: '255,255,93', signal: '255,255,150', node: '243,255,190', nodeAlpha: '.60' };
   let width = 0, height = 0, nodes = [], frame = 0, last = 0;
   let inView = true, paused = false, running = false;
   let seed = 7183;
@@ -141,17 +146,17 @@
         const b = nodes[j], d = Math.hypot(a.x - b.x, a.y - b.y);
         if(d < distance) {
           const alpha = (1 - d / distance) * .40;
-          ctx.strokeStyle = `rgba(255,255,93,${alpha})`; ctx.lineWidth = 1.05;
+          ctx.strokeStyle = `rgba(${networkPalette.line},${alpha})`; ctx.lineWidth = 1.05;
           ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
           // Signal beads travel only on selected connections, with no flashing.
           if(!motion.matches && i % 9 === 0 && j % 4 === 0) {
             const t = (Math.sin(a.phase * .6) + 1) / 2;
-            ctx.fillStyle = 'rgba(255,255,150,.58)';
+            ctx.fillStyle = `rgba(${networkPalette.signal},.58)`;
             ctx.beginPath(); ctx.arc(a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t,2.0,0,Math.PI*2);ctx.fill();
           }
         }
       }
-      ctx.fillStyle = 'rgba(243,255,190,.60)';
+      ctx.fillStyle = `rgba(${networkPalette.node},${networkPalette.nodeAlpha})`;
       ctx.beginPath(); ctx.arc(a.x,a.y,a.r,0,Math.PI*2);ctx.fill();
     }
   }

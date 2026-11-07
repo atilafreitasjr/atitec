@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Deliverable;
+use App\Models\DeliverableTask;
 use App\Models\Project;
 use Database\Seeders\AtitecRecentTasksSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -12,7 +13,7 @@ class AtitecRecentTasksSeederTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_recent_atitec_tasks_are_added_without_hours_and_without_duplicates(): void
+    public function test_recent_atitec_tasks_use_fifty_per_hour_without_hours_and_without_duplicates(): void
     {
         $project = Project::create([
             'title' => 'ATITEC',
@@ -22,25 +23,33 @@ class AtitecRecentTasksSeederTest extends TestCase
             'progress' => 100,
             'sort_order' => 0,
         ]);
-        $deliverable = Deliverable::create([
-            'project_id' => $project->id,
-            'name' => 'Administração e CRM',
-            'status' => 'concluido',
-        ]);
+
+        foreach (['Administração e CRM', 'Fundação do projeto e infraestrutura', 'Site institucional'] as $name) {
+            Deliverable::create([
+                'project_id' => $project->id,
+                'name' => $name,
+                'status' => 'concluido',
+            ]);
+        }
 
         $this->seed(AtitecRecentTasksSeeder::class);
         $this->seed(AtitecRecentTasksSeeder::class);
 
-        $tasks = $deliverable->fresh()->tasks;
+        $tasks = DeliverableTask::where('project_id', $project->id)->get();
 
-        $this->assertCount(2, $tasks);
-        $this->assertSame(2, $tasks->where('status', 'concluido')->count());
+        $this->assertCount(5, $tasks);
+        $this->assertSame(5, $tasks->where('status', 'concluido')->count());
         $this->assertTrue($tasks->every(fn ($task) => $task->hours_estimated === null && $task->hours_actual === null));
+        $this->assertTrue($tasks->every(fn ($task) => (float) $task->hourly_rate === 50.0));
         $this->assertDatabaseHas('deliverable_tasks', [
             'project_id' => $project->id,
-            'deliverable_id' => $deliverable->id,
-            'title' => 'Paginação compartilhada no admin e portal',
-            'hourly_rate' => 0,
+            'title' => 'Troca persistente de tema claro/escuro no painel',
+            'hourly_rate' => 50,
+        ]);
+        $this->assertDatabaseHas('deliverable_tasks', [
+            'project_id' => $project->id,
+            'title' => 'Tema claro fiel na home pública com switch persistente',
+            'hourly_rate' => 50,
         ]);
     }
 }

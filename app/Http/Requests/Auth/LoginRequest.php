@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Support\Theme;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -58,6 +59,11 @@ class LoginRequest extends FormRequest
             throw ValidationException::withMessages([
                 'email' => 'Esta conta está desativada. Procure o administrador.',
             ]);
+        }
+
+        // Se o visitante escolheu um tema antes de entrar, mantém a escolha no cadastro.
+        if ($theme = $this->session()->get(Theme::COOKIE)) {
+            Auth::user()->forceFill(['theme' => $theme])->save();
         }
 
         RateLimiter::clear($this->throttleKey());
