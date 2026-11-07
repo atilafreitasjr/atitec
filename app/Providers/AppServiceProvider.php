@@ -52,6 +52,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer('adminlte::page', function ($view) use ($adminMenu, $adminDocsUrl, $clientMenu) {
             $user = auth()->user();
             $isClient = $user?->role === 'cliente';
+            $isLightTheme = $user?->theme === 'light';
             $menu = $isClient ? $clientMenu : $adminMenu;
 
             // Badge de dúvidas da IA aguardando atendimento humano.
@@ -72,12 +73,18 @@ class AppServiceProvider extends ServiceProvider
             config([
                 'adminlte.menu' => $menu,
                 'adminlte.sidebar_docs_url' => $isClient ? '/cliente/ajuda' : $adminDocsUrl,
+                'adminlte.classes_body' => $isLightTheme ? 'at-theme-light' : 'at-theme-dark',
+                'adminlte.sidebar_theme' => $isLightTheme ? 'light' : 'dark',
+                'adminlte.sidebar_color' => $isLightTheme ? '#F1F5E8' : '#101113',
+                'adminlte.navbar_color' => $isLightTheme ? '#FAFBF6' : '#0A0A0B',
+                'adminlte.footer_color' => $isLightTheme ? '#F1F5E8' : '#0A0A0B',
             ]);
 
-            // O admin e o workspace do cliente usam o tema escuro fixo.
-            // Sem data-bs-theme, variáveis dinâmicas do Bootstrap (ex.: texto
-            // secundário) seguem o tema claro do celular e ficam ilegíveis.
-            $view->with('darkMode', true);
+            // O modo escuro usa as variáveis Bootstrap do tema dark; no claro,
+            // o atributo fica ausente e o CSS ATITEC aplica a paleta do ZIP.
+            if (! $isLightTheme) {
+                $view->with('darkMode', true);
+            }
 
             // O construtor do menu é singleton; descarta a instância resolvida
             // para que cada render use o menu do papel atual.

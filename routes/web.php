@@ -19,6 +19,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectDocumentController;
 use App\Http\Controllers\SiteController;
 use App\Models\DeliverableTask;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Binding explícito: {task} refere-se a DeliverableTask (isolado por projeto via scopeBindings).
@@ -76,6 +77,16 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    Route::post('/theme', function (Request $request) {
+        $data = $request->validate([
+            'theme' => ['required', 'in:dark,light'],
+        ]);
+
+        $request->user()->forceFill(['theme' => $data['theme']])->save();
+
+        return back();
+    })->name('theme.update');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

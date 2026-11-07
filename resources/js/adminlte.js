@@ -250,6 +250,15 @@ function initTreeviewA11y() {
   })
 }
 
+function initThemeSwitches() {
+  document.querySelectorAll('[data-theme-switch]').forEach((input) => {
+    if (input.dataset.themeSwitchReady) return
+
+    input.addEventListener('change', () => input.form?.requestSubmit())
+    input.dataset.themeSwitchReady = 'true'
+  })
+}
+
 whenReady(() => {
   // Wire OverlayScrollbars to the sidebar (matches the AdminLTE demo behaviour)
   const sidebar = document.querySelector('.sidebar-wrapper')
@@ -268,4 +277,5 @@ whenReady(() => {
   initDatatables()
   initEditors()
   initTreeviewA11y()
+  initThemeSwitches()
 })
