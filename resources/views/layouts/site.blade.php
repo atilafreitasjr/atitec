@@ -1,15 +1,15 @@
 @php
     $siteTheme = \App\Support\Theme::current();
-    $isLightHome = $siteTheme === \App\Support\Theme::LIGHT && request()->routeIs('site.home');
+    $isLightTheme = $siteTheme === \App\Support\Theme::LIGHT;
 @endphp
 <!DOCTYPE html>
-<html lang="pt-BR" @if($isLightHome) data-theme="light" @endif>
+<html lang="pt-BR" @if($isLightTheme) data-theme="light" @endif>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description" content="@yield('description', 'ATITEC — Consultorias e Tecnologias. Softwares sob medida, consultoria comercial e automatização de atendimentos.')">
-    <meta name="theme-color" content="{{ $isLightHome ? '#FAFBF6' : '#0A0A0B' }}">
+    <meta name="theme-color" content="{{ $isLightTheme ? '#FAFBF6' : '#0A0A0B' }}">
     <title>@yield('title', 'ATITEC — Consultorias e Tecnologias')</title>
     <link rel="icon" type="image/png" href="{{ asset('atitec/assets/images/atitec_logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,7 +20,7 @@
 
     {{-- Layout novo da ATITEC (CSS/JS próprios da entrega de design). --}}
     <link rel="stylesheet" href="{{ asset('atitec/assets/css/style.css') }}">
-    @if($isLightHome)
+    @if($isLightTheme)
         {{-- Tema claro exatamente como entregue no ZIP, carregado depois da base. --}}
         <link rel="stylesheet" href="{{ asset('atitec/assets/css/theme-light.css') }}">
     @endif
@@ -51,29 +51,27 @@
             </nav>
 
             <div class="header-actions">
-                @if(request()->routeIs('site.home'))
-                    <form method="POST" action="{{ route('theme.update') }}" class="site-theme-form">
-                        @csrf
-                        <input type="hidden" name="theme" value="dark">
-                        <label class="site-theme-switch" for="site-theme-switch">
-                            <input
-                                id="site-theme-switch"
-                                type="checkbox"
-                                name="theme"
-                                value="light"
-                                data-site-theme-switch
-                                @checked($siteTheme === \App\Support\Theme::LIGHT)
-                                aria-label="Ativar tema claro da página inicial"
-                            >
-                            <span class="site-theme-switch__track" aria-hidden="true">
-                                <span class="site-theme-switch__thumb"></span>
-                            </span>
-                            <span class="site-theme-switch__label site-theme-switch__label--light">Claro</span>
-                            <span class="site-theme-switch__label site-theme-switch__label--dark">Escuro</span>
-                        </label>
-                        <button type="submit" class="sr-only">Aplicar tema</button>
-                    </form>
-                @endif
+                <form method="POST" action="{{ route('theme.update') }}" class="site-theme-form">
+                    @csrf
+                    <input type="hidden" name="theme" value="dark">
+                    <label class="site-theme-switch" for="site-theme-switch">
+                        <input
+                            id="site-theme-switch"
+                            type="checkbox"
+                            name="theme"
+                            value="light"
+                            data-site-theme-switch
+                            @checked($siteTheme === \App\Support\Theme::LIGHT)
+                            aria-label="Ativar tema claro"
+                        >
+                        <span class="site-theme-switch__track" aria-hidden="true">
+                            <span class="site-theme-switch__thumb"></span>
+                        </span>
+                        <span class="site-theme-switch__label site-theme-switch__label--light"><i class="bi bi-sun" aria-hidden="true"></i>Claro</span>
+                        <span class="site-theme-switch__label site-theme-switch__label--dark"><i class="bi bi-moon-stars" aria-hidden="true"></i>Escuro</span>
+                    </label>
+                    <button type="submit" class="sr-only">Aplicar tema</button>
+                </form>
 
                 @auth
                     <a class="client-link" href="{{ route('dashboard') }}">
@@ -118,7 +116,7 @@
     </header>
 
     @if(session('success'))
-        <div class="max-w-7xl mx-auto px-4 mt-4">
+        <div class="site-flash max-w-7xl mx-auto px-4 mt-4">
             <div class="bg-green-900/60 border border-green-500/40 text-green-100 px-4 py-3 rounded-lg">{{ session('success') }}</div>
         </div>
     @endif

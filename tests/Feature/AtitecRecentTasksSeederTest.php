@@ -37,8 +37,8 @@ class AtitecRecentTasksSeederTest extends TestCase
 
         $tasks = DeliverableTask::where('project_id', $project->id)->get();
 
-        $this->assertCount(5, $tasks);
-        $this->assertSame(5, $tasks->where('status', 'concluido')->count());
+        $this->assertCount(7, $tasks);
+        $this->assertSame(7, $tasks->where('status', 'concluido')->count());
         $this->assertTrue($tasks->every(fn ($task) => $task->hours_estimated === null && $task->hours_actual === null));
         $this->assertTrue($tasks->every(fn ($task) => (float) $task->hourly_rate === 50.0));
         $this->assertDatabaseHas('deliverable_tasks', [
@@ -49,6 +49,16 @@ class AtitecRecentTasksSeederTest extends TestCase
         $this->assertDatabaseHas('deliverable_tasks', [
             'project_id' => $project->id,
             'title' => 'Tema claro fiel na home pública com switch persistente',
+            'hourly_rate' => 50,
+        ]);
+        $this->assertDatabaseHas('deliverable_tasks', [
+            'project_id' => $project->id,
+            'title' => 'Tema claro nas páginas internas, cartão digital e widget de IA',
+            'hourly_rate' => 50,
+        ]);
+        $this->assertDatabaseHas('deliverable_tasks', [
+            'project_id' => $project->id,
+            'title' => 'Contraste dos rótulos de destaque no tema claro do painel',
             'hourly_rate' => 50,
         ]);
     }

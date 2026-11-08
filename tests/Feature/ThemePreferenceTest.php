@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Support\Theme;
+use Database\Seeders\ChannelSeeder;
 use Database\Seeders\ProjectSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -101,5 +102,34 @@ class ThemePreferenceTest extends TestCase
             ->assertRedirect();
 
         $this->assertSame('light', $user->fresh()->theme);
+    }
+
+    public function test_light_theme_applies_to_internal_public_pages_and_cartao(): void
+    {
+        $this->seed(ChannelSeeder::class);
+        $this->seed(ProjectSeeder::class);
+
+        $pages = [
+            '/sobre',
+            '/contato',
+            '/portfolio',
+            '/servicos/desenvolvimento-sob-medida',
+            '/orcamento',
+        ];
+
+        foreach ($pages as $url) {
+            $this->withSession([Theme::COOKIE => 'light'])
+                ->get($url)
+                ->assertOk()
+                ->assertSee('data-theme="light"', false)
+                ->assertSee('theme-light.css', false)
+                ->assertSee('data-site-theme-switch', false);
+        }
+
+        $this->withSession([Theme::COOKIE => 'light'])
+            ->get('/cartao')
+            ->assertOk()
+            ->assertSee('data-theme="light"', false)
+            ->assertSee('cartao-brand', false);
     }
 }

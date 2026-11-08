@@ -644,6 +644,10 @@ body.at-theme-light a:not(.btn):not(.nav-link):not(.dropdown-item) {
     color: #53621e !important;
 }
 
+body.at-theme-light .text-warning {
+    color: #7c6f00 !important;
+}
+
 body.at-theme-light .btn-link:hover,
 body.at-theme-light a:not(.btn):not(.nav-link):not(.dropdown-item):hover {
     color: #344315 !important;
@@ -724,6 +728,24 @@ body.at-theme-light .sidebar-docs-cta .btn-outline-light {
 
 .at-theme-switch .form-check-label i {
     font-size: .9rem;
+}
+
+.at-theme-switch__label {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+}
+
+.at-theme-switch__label--dark {
+    display: none;
+}
+
+.at-theme-switch .form-check-input:checked ~ .form-check-label .at-theme-switch__label--light {
+    display: none;
+}
+
+.at-theme-switch .form-check-input:checked ~ .form-check-label .at-theme-switch__label--dark {
+    display: inline-flex;
 }
 
 @media (max-width: 767.98px) {

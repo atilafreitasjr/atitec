@@ -45,6 +45,16 @@ class AtitecRecentTasksSeeder extends Seeder
             'deliverable' => 'Site institucional',
             'description' => 'Tema claro do ZIP aplicado à home, switch no header, persistência para visitantes e usuários e cores da rede ambiente por tema.',
         ],
+        [
+            'title' => 'Tema claro nas páginas internas, cartão digital e widget de IA',
+            'deliverable' => 'Site institucional',
+            'description' => 'Tema claro aplicado em sobre, contato, portfólio, serviços, cases, orçamento e cartão; switch no header de todas as páginas públicas e widget de IA adaptado ao tema.',
+        ],
+        [
+            'title' => 'Contraste dos rótulos de destaque no tema claro do painel',
+            'deliverable' => 'Administração e CRM',
+            'description' => 'Ajuste do .text-warning para dourado-oliva escuro (#7C6F00) no tema claro do admin e portal, mantendo o amarelo no tema escuro.',
+        ],
     ];
 
     public function run(): void

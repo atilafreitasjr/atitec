@@ -14,9 +14,15 @@
                     @checked(auth()->user()?->theme === 'light')
                     aria-label="Alternar entre tema escuro e claro"
                 >
-                <label class="form-check-label" for="atitec-theme-switch" title="Tema claro">
-                    <i class="bi bi-sun" aria-hidden="true"></i>
-                    <span class="d-none d-xl-inline">Claro</span>
+                <label class="form-check-label" for="atitec-theme-switch" title="Alternar tema">
+                    <span class="at-theme-switch__label at-theme-switch__label--light">
+                        <i class="bi bi-sun" aria-hidden="true"></i>
+                        <span class="d-none d-xl-inline">Claro</span>
+                    </span>
+                    <span class="at-theme-switch__label at-theme-switch__label--dark">
+                        <i class="bi bi-moon-stars" aria-hidden="true"></i>
+                        <span class="d-none d-xl-inline">Escuro</span>
+                    </span>
                 </label>
             </div>
         </form>

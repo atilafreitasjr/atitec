@@ -12,9 +12,10 @@
     // URLs absolutas do site principal: o cartão também é servido no subdomínio
     // cartao.atitec.com.br, onde route() geraria links quebrados no próprio subdomínio.
     $siteUrl = rtrim(config('app.url'), '/');
+    $siteTheme = \App\Support\Theme::current();
 @endphp
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" @if($siteTheme === \App\Support\Theme::LIGHT) data-theme="light" @endif>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -30,10 +31,12 @@
         <img src="{{ asset('images/atitec_marca_agua.svg') }}" alt="" aria-hidden="true" class="pointer-events-none select-none absolute -top-24 -right-24 w-[380px] max-w-none opacity-[0.07]">
         <img src="{{ asset('images/atitec_marca_agua.svg') }}" alt="" aria-hidden="true" class="pointer-events-none select-none absolute top-1/2 -left-28 w-[380px] max-w-none opacity-[0.05]">
 
-        <main class="relative max-w-md mx-auto px-5 pt-10 pb-12">
+        <main class="relative max-w-md mx-auto px-5 pt-10 pb-12" id="conteudo">
             {{-- Identidade --}}
             <div class="text-center">
-                <img src="{{ asset('images/atitec_logo.svg') }}" alt="ATITEC" class="h-32 w-auto mx-auto">
+                <div class="cartao-brand">
+                    <img src="{{ asset('images/atitec_logo.svg') }}" alt="ATITEC" class="h-32 w-auto">
+                </div>
                 <img src="{{ asset('images/atila_foto.png') }}" alt="{{ $card['name'] }}" class="w-32 h-32 rounded-full object-cover mx-auto mt-6 ring-4 ring-[#FFFF5D] shadow-[0_0_40px_rgba(255,255,93,0.25)]">
                 <h1 class="font-[Montserrat] font-extrabold text-2xl mt-4">{{ $card['name'] }}</h1>
                 <p class="inline-block mt-2 text-xs font-semibold tracking-widest uppercase bg-[#FFFF5D] text-black px-3 py-1.5 rounded-full">{{ $card['role'] }}</p>
